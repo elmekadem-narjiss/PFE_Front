@@ -18,13 +18,14 @@ export default function Batteries() {
     manufacturedDate: '',
   });
   const [editingBattery, setEditingBattery] = useState<Battery | null>(null);
+  const [loading, setLoading] = useState<string | null>(null); // Track loading state for buttons
 
   const fetchBatteries = () => {
     // For now, we're using the monitoredBatteries from BatteryContext
     // In a real app, you’d fetch from the backend and sync with the monitoring service
   };
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (
       !newBattery.name.trim() ||
       newBattery.name.trim().length < 3 ||
@@ -43,7 +44,7 @@ export default function Batteries() {
     const batteryData = {
       name: newBattery.name.trim(),
       capacity: Number(newBattery.capacity),
-      voltage: 3.7, // Default voltage value
+      voltage: 3.7,
       stateOfCharge: Number(newBattery.stateOfCharge),
       chemistry: newBattery.chemistry.trim(),
       cycleCount: Number(newBattery.cycleCount),
@@ -53,7 +54,8 @@ export default function Batteries() {
     };
 
     try {
-      addBattery(batteryData);
+      setLoading('create');
+      await addBattery(batteryData);
       setNewBattery({
         name: '',
         capacity: 0,
@@ -65,14 +67,19 @@ export default function Batteries() {
       });
     } catch (error) {
       console.error('Erreur lors de la création de la batterie:', error);
+    } finally {
+      setLoading(null);
     }
   };
 
   const handleUpdate = async (id: string, updates: Partial<Battery>) => {
     try {
-      updateBatteryInMock(id, updates);
+      setLoading(`update-${id}`);
+      await updateBatteryInMock(id, updates);
     } catch (error) {
       console.error('Erreur lors de la mise à jour de la batterie:', error);
+    } finally {
+      setLoading(null);
     }
   };
 
@@ -99,6 +106,7 @@ export default function Batteries() {
     }
 
     try {
+      setLoading(`save-${editingBattery.id}`);
       const updates: Partial<Battery> = {
         name: editingBattery.name.trim(),
         capacity: Number(editingBattery.capacity),
@@ -112,6 +120,8 @@ export default function Batteries() {
       setEditingBattery(null);
     } catch (error) {
       console.error('Erreur lors de la sauvegarde de la batterie:', error);
+    } finally {
+      setLoading(null);
     }
   };
 
@@ -121,9 +131,12 @@ export default function Batteries() {
 
   const handleDelete = async (id: string) => {
     try {
-      deleteBatteryFromMock(id);
+      setLoading(`delete-${id}`);
+      await deleteBatteryFromMock(id);
     } catch (error) {
       console.error('Erreur lors de la suppression de la batterie:', error);
+    } finally {
+      setLoading(null);
     }
   };
 
@@ -210,7 +223,11 @@ export default function Batteries() {
             />
           </div>
           <div className={styles.buttonWrapper}>
-            <button onClick={handleCreate} className={styles.addButton}>
+            <button
+              onClick={handleCreate}
+              className={`${styles.addButton} ${loading === 'create' ? styles.loading : ''}`}
+              disabled={loading === 'create'}
+            >
               Ajouter Batterie
             </button>
           </div>
@@ -294,10 +311,18 @@ export default function Batteries() {
             </div>
             <div className={styles.buttonWrapper}>
               <div className={styles.buttonGroup}>
-                <button onClick={handleSaveEdit} className={styles.saveButton}>
+                <button
+                  onClick={handleSaveEdit}
+                  className={`${styles.saveButton} ${loading === `save-${editingBattery.id}` ? styles.loading : ''}`}
+                  disabled={loading === `save-${editingBattery.id}`}
+                >
                   Enregistrer
                 </button>
-                <button onClick={handleCancelEdit} className={styles.cancelButton}>
+                <button
+                  onClick={handleCancelEdit}
+                  className={styles.cancelButton}
+                  disabled={loading !== null}
+                >
                   Annuler
                 </button>
               </div>
@@ -309,7 +334,10 @@ export default function Batteries() {
       {/* Liste des batteries */}
       <div className={styles.batteryGrid}>
         {monitoredBatteries.map((battery) => (
-          <div key={battery.id} className={`${styles.batteryCard} ${battery.status === 'Failed' ? styles.failed : ''}`}>
+          <div
+            key={battery.id}
+            className={`${styles.batteryCard} ${battery.status === 'Failed' ? styles.failed : ''}`}
+          >
             <h2 className={styles.batteryTitle}>{battery.name}</h2>
             <p className={styles.batteryInfo}>ID: {battery.id}</p>
             <p className={styles.batteryInfo}>Capacité: {battery.capacity} kWh</p>
@@ -337,14 +365,23 @@ export default function Batteries() {
                 onClick={() =>
                   handleUpdate(battery.id, { stateOfCharge: battery.stateOfCharge + 10 })
                 }
-                className={styles.chargeButton}
+                className={`${styles.chargeButton} ${loading === `update-${battery.id}` ? styles.loading : ''}`}
+                disabled={loading === `update-${battery.id}`}
               >
                 Augmenter charge (+10%)
               </button>
-              <button onClick={() => handleEdit(battery)} className={styles.editButton}>
+              <button
+                onClick={() => handleEdit(battery)}
+                className={styles.editButton}
+                disabled={loading !== null}
+              >
                 Modifier
               </button>
-              <button onClick={() => handleDelete(battery.id)} className={styles.deleteButton}>
+              <button
+                onClick={() => handleDelete(battery.id)}
+                className={`${styles.deleteButton} ${loading === `delete-${battery.id}` ? styles.loading : ''}`}
+                disabled={loading === `delete-${battery.id}`}
+              >
                 Supprimer
               </button>
             </div>
