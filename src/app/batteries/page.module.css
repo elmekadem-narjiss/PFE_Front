@@ -1,0 +1,157 @@
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+  
+  .title {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #e5e7eb;
+    margin-bottom: 2rem;
+    text-align: center;
+  }
+  
+  .formContainer {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    backdrop-filter: blur(10px);
+  }
+  
+  .formTitle {
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: #e5e7eb;
+    margin-bottom: 1.5rem;
+  }
+  
+  .formGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+  }
+  
+  .label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #e5e7eb;
+    margin-bottom: 0.5rem;
+  }
+  
+  .input {
+    width: 100%;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 0.5rem;
+    color: #e5e7eb;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.3s ease;
+  }
+  
+  .input:focus {
+    border-color: #39c0ed;
+  }
+  
+  .buttonWrapper {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+  }
+  
+  .buttonGroup {
+    display: flex;
+    gap: 0.5rem;
+  }
+  
+  .addButton,
+  .saveButton,
+  .cancelButton,
+  .chargeButton,
+  .editButton,
+  .deleteButton {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .addButton,
+  .saveButton,
+  .chargeButton {
+    background: linear-gradient(90deg, #2563eb, #39c0ed);
+    color: #ffffff;
+  }
+  
+  .addButton:hover,
+  .saveButton:hover,
+  .chargeButton:hover {
+    background: linear-gradient(90deg, #1d4ed8, #2b9cd8);
+    box-shadow: 0 0 10px rgba(57, 192, 237, 0.5);
+  }
+  
+  .cancelButton {
+    background: rgba(255, 255, 255, 0.1);
+    color: #e5e7eb;
+  }
+  
+  .cancelButton:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+  
+  .editButton {
+    background: #10b981;
+    color: #ffffff;
+  }
+  
+  .editButton:hover {
+    background: #059669;
+  }
+  
+  .deleteButton {
+    background: #ef4444;
+    color: #ffffff;
+  }
+  
+  .deleteButton:hover {
+    background: #dc2626;
+  }
+  
+  .batteryGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+  }
+  
+  .batteryCard {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .failed {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: #ef4444;
+  }
+  
+  .batteryTitle {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #e5e7eb;
+    margin-bottom: 1rem;
+  }
+  
+  .batteryInfo {
+    font-size: 0.9rem;
+    color: #d1d5db;
+    margin-bottom: 0.5rem;
+  }

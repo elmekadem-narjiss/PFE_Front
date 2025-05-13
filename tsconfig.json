@@ -20,8 +20,10 @@
     ],
     "paths": {
       "@/*": ["./src/*"]
-    }
+    },
+    "types": ["node"], // Ensure Node.js types are included
+    "typeRoots": ["./node_modules/@types", "./src/types"] // Add custom types directory
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/types/**/*.d.ts"], // Include custom type declarations
   "exclude": ["node_modules"]
 }
