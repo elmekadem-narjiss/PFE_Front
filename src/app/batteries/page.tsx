@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { Battery } from '@/types';
 import { useBatteryContext } from '@/context/BatteryContext';
-import { addBattery, updateBatteryInMock, deleteBatteryFromMock } from '@/lib/batteryMonitoring';
+import { createBattery, updateBattery, deleteBattery, getBatteries } from '@/services/api';
+import {  TEMPERATURE_THRESHOLD } from '@/lib/batteryMonitoring'; //VOLTAGE_THRESHOLD
 import styles from './page.module.css';
 
 export default function Batteries() {
@@ -18,11 +19,47 @@ export default function Batteries() {
     manufacturedDate: '',
   });
   const [editingBattery, setEditingBattery] = useState<Battery | null>(null);
-  const [loading, setLoading] = useState<string | null>(null); // Track loading state for buttons
+  const [loading, setLoading] = useState<string | null>(null);
 
-  const fetchBatteries = () => {
-    // For now, we're using the monitoredBatteries from BatteryContext
-    // In a real app, you’d fetch from the backend and sync with the monitoring service
+  const determineStatus = (voltage: number, temperature: number): 'Operational' | 'Failed' => {
+    if ( temperature > TEMPERATURE_THRESHOLD) { //
+      return 'Failed';
+    }
+    return 'Operational';
+  };
+
+  const fetchBatteries = async () => {
+    try {
+      setLoading('fetch');
+      const data = await getBatteries();
+      const updatedBatteries = data.map((battery: Battery) => ({
+        ...battery,
+        status: determineStatus(battery.voltage ?? 0, battery.temperature ?? 0),
+      }));
+      setBatteries(updatedBatteries);
+    } catch (error) {
+      console.error('Erreur lors de la récupération des batteries:', error);
+    } finally {
+      setLoading(null);
+    }
+  };
+
+  const sendEmailNotification = async (id: string, voltage: number, temperature: number) => {
+    try {
+      const response = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, voltage, temperature }),
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        console.error('Failed to send email:', result.error, result.details);
+      } else {
+        console.log('Email sent successfully:', result.message);
+      }
+    } catch (err) {
+      console.error('Error sending email:', err);
+    }
   };
 
   const handleCreate = async () => {
@@ -41,7 +78,7 @@ export default function Batteries() {
       return;
     }
 
-    const batteryData = {
+    const batteryData: Omit<Battery, 'id'> = {
       name: newBattery.name.trim(),
       capacity: Number(newBattery.capacity),
       voltage: 3.7,
@@ -51,19 +88,23 @@ export default function Batteries() {
       temperature: newBattery.temperature ? Number(newBattery.temperature) : 25,
       manufacturedDate: newBattery.manufacturedDate || null,
       lastMaintenance: null,
+      status: determineStatus(3.7, newBattery.temperature ? Number(newBattery.temperature) : 25),
+      lastChecked: new Date().toISOString(),
     };
 
     try {
       setLoading('create');
-      await addBattery(batteryData);
-      setNewBattery({
-        name: '',
-        capacity: 0,
-        stateOfCharge: 100,
-        chemistry: 'Li-ion',
-        cycleCount: 0,
-        temperature: 25,
-        manufacturedDate: '',
+      const createdBattery = await createBattery(batteryData);
+      setBatteries((prev: Battery[]) => {
+        const updatedBatteries = [...prev, createdBattery];
+        if (createdBattery.status === 'Failed') {
+          sendEmailNotification(
+            createdBattery.id.toString(),
+            createdBattery.voltage,
+            createdBattery.temperature
+          );
+        }
+        return updatedBatteries;
       });
     } catch (error) {
       console.error('Erreur lors de la création de la batterie:', error);
@@ -72,10 +113,32 @@ export default function Batteries() {
     }
   };
 
-  const handleUpdate = async (id: string, updates: Partial<Battery>) => {
+  const handleUpdate = async (id: number, updates: Partial<Battery>) => {
     try {
       setLoading(`update-${id}`);
-      await updateBatteryInMock(id, updates);
+      const batteryToUpdate = monitoredBatteries.find((b) => b.id === id);
+      if (!batteryToUpdate) return;
+
+      const updatedVoltage = updates.voltage ?? batteryToUpdate.voltage;
+      const updatedTemperature = updates.temperature ?? batteryToUpdate.temperature;
+      const updatedStatus = determineStatus(updatedVoltage, updatedTemperature);
+
+      const finalUpdates = { ...updates, status: updatedStatus };
+      const updatedBattery = await updateBattery(id, finalUpdates);
+
+      setBatteries((prev: Battery[]) => {
+        const newBatteries = prev.map((battery: Battery) =>
+          battery.id === id ? updatedBattery : battery
+        );
+        if (updatedBattery.status === 'Failed' && batteryToUpdate.status !== 'Failed') {
+          sendEmailNotification(
+            updatedBattery.id.toString(),
+            updatedBattery.voltage,
+            updatedBattery.temperature
+          );
+        }
+        return newBatteries;
+      });
     } catch (error) {
       console.error('Erreur lors de la mise à jour de la batterie:', error);
     } finally {
@@ -115,9 +178,24 @@ export default function Batteries() {
         cycleCount: Number(editingBattery.cycleCount),
         temperature: editingBattery.temperature ? Number(editingBattery.temperature) : 25,
         manufacturedDate: editingBattery.manufacturedDate || null,
+        voltage: editingBattery.voltage,
+        status: determineStatus(editingBattery.voltage ?? 0, editingBattery.temperature ?? 0),
       };
-      await handleUpdate(editingBattery.id, updates);
-      setEditingBattery(null);
+      const updatedBattery = await updateBattery(editingBattery.id, updates);
+
+      setBatteries((prev: Battery[]) => {
+        const newBatteries = prev.map((battery: Battery) =>
+          battery.id === editingBattery.id ? updatedBattery : battery
+        );
+        if (updatedBattery.status === 'Failed' && editingBattery.status !== 'Failed') {
+          sendEmailNotification(
+            updatedBattery.id.toString(),
+            updatedBattery.voltage,
+            updatedBattery.temperature
+          );
+        }
+        return newBatteries;
+      });
     } catch (error) {
       console.error('Erreur lors de la sauvegarde de la batterie:', error);
     } finally {
@@ -129,10 +207,11 @@ export default function Batteries() {
     setEditingBattery(null);
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: number) => {
     try {
       setLoading(`delete-${id}`);
-      await deleteBatteryFromMock(id);
+      await deleteBattery(id);
+      setBatteries((prev: Battery[]) => prev.filter((battery: Battery) => battery.id !== id));
     } catch (error) {
       console.error('Erreur lors de la suppression de la batterie:', error);
     } finally {

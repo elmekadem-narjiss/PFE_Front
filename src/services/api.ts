@@ -20,11 +20,19 @@ export const createBattery = async (battery: Omit<Battery, 'id'>) => {
   return response.data;
 };
 
-export const updateBattery = async (id: number, battery: Partial<Battery>) => {
-  const response = await api.put(`/batteries/${id}`, battery);
+export const updateBattery = async (id: string | number, battery: Partial<Battery>) => {
+  const numericId = Number(id);
+  if (isNaN(numericId)) {
+    throw new Error('Invalid battery ID');
+  }
+  const response = await api.put(`/batteries/${numericId}`, battery);
   return response.data;
 };
 
-export const deleteBattery = async (id: number) => {
-  await api.delete(`/batteries/${id}`);
+export const deleteBattery = async (id: string | number) => {
+  const numericId = Number(id);
+  if (isNaN(numericId)) {
+    throw new Error('Invalid battery ID');
+  }
+  await api.delete(`/batteries/${numericId}`);
 };

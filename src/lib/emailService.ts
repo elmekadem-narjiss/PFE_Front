@@ -1,29 +1,29 @@
 import nodemailer from 'nodemailer';
-import { VOLTAGE_THRESHOLD, TEMPERATURE_THRESHOLD } from './batteryMonitoring';
+import { TEMPERATURE_THRESHOLD } from './batteryMonitoring';
 
-// Configure the email transporter (using a test account for now)
 const transporter = nodemailer.createTransport({
-  host: 'smtp.ethereal.email', // Use Ethereal for testing (replace with real SMTP in production)
+  host: 'smtp.ethereal.email',
   port: 587,
   auth: {
-    user: 'violet.erdman@ethereal.email', // Replace with your Ethereal email
-    pass: 'YKBkfEFdHHvypRPsEw', // Replace with your Ethereal password
+    user: 'violet.erdman@ethereal.email',
+    pass: 'YKBkfEFdHHvypRPsEw',
   },
 });
 
-// Function to send an email notification
 export async function sendBatteryFailureEmail(battery: { id: string; voltage: number; temperature: number }) {
   const mailOptions = {
-    from: 'violet.erdman@ethereal.email', // Sender address
-    to: 'narjiss.elmekadem@etu.uae.ac.ma', // Replace with the admin's email
+    from: 'violet.erdman@ethereal.email',
+    to: 'narjiss.elmekadem@etu.uae.ac.ma',
     subject: `Battery Failure Alert: ${battery.id}`,
-    text: `Battery ${battery.id} has failed!\n\nVoltage: ${battery.voltage}V (Threshold: <${VOLTAGE_THRESHOLD}V)\nTemperature: ${battery.temperature}°C (Threshold: >${TEMPERATURE_THRESHOLD}°C)\n\nPlease take action immediately.`,
+    text: `Battery ${battery.id} has failed!\n\nVoltage: ${battery.voltage}V\nTemperature: ${battery.temperature}°C (Threshold: >${TEMPERATURE_THRESHOLD}°C)\n\nPlease take action immediately.`,
   };
 
   try {
     const info = await transporter.sendMail(mailOptions);
     console.log('Email sent:', info.response);
-  } catch (error) {
-    console.error('Error sending email:', error);
+    return { success: true, message: 'Email sent successfully', response: info.response };
+  } catch (error: any) {
+    console.error('Error sending email:', error.message || error);
+    throw new Error(`Failed to send email: ${error.message || 'Unknown error'}`);
   }
 }
