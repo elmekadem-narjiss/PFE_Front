@@ -22,7 +22,7 @@ export default function Navbar({ isOpen, onToggle }: NavbarProps) {
           </li>
           <li className={styles.navItem}>
             <a href="/dashboard" className={styles.navLink}>
-              Dashboard
+              Predict-Service
             </a>
           </li>
           <li className={styles.navItem}>

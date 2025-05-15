@@ -1,22 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Line } from 'react-chartjs-2';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  ChartOptions,
-} from 'chart.js';
-import PredictionsTable from '../../components/PredictionsTable';
+import { useState, useEffect, useRef } from 'react';
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
+import { Parser } from 'json2csv';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTable, faInfoCircle, faSolarPanel, faDownload, faCompress, faExpand } from '@fortawesome/free-solid-svg-icons';
+import MonthSection from './MonthSection';
 import { Prediction } from '../../types/prediction';
 
-// Register Chart.js components
+// Register Chart.js components (safe for SSR)
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -24,7 +16,33 @@ ChartJS.register(
   LineElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  {
+    id: 'linePulse',
+    beforeDraw(chart) {
+      const ctx = chart.ctx;
+      const dataset = chart.data.datasets[0];
+      const meta = chart.getDatasetMeta(0);
+      if (meta.type === 'line') {
+        ctx.save();
+        const gradient = ctx.createLinearGradient(0, 0, chart.width, 0);
+        gradient.addColorStop(0, (dataset.borderColor as string) || '#FFC107');
+        gradient.addColorStop(0.5, 'rgba(255,193,7,0.7)');
+        gradient.addColorStop(1, (dataset.borderColor as string) || '#FFC107');
+        ctx.strokeStyle = gradient;
+        ctx.lineWidth = (typeof dataset.borderWidth === 'number' ? dataset.borderWidth : 2);
+        ctx.beginPath();
+        meta.data.forEach((point, index) => {
+          const x = point.x;
+          const y = point.y;
+          if (index === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+        ctx.restore();
+      }
+    },
+  }
 );
 
 export default function Dashboard() {
@@ -32,7 +50,34 @@ export default function Dashboard() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [hiddenTables, setHiddenTables] = useState<Record<number, boolean>>({});
+  const [collapsedMonths, setCollapsedMonths] = useState<Record<number, boolean>>({});
+  const [filters, setFilters] = useState<{ hour: number | null }>({ hour: null });
+  const [theme, setTheme] = useState<'solar' | 'wind' | 'hydro'>('solar');
+  const [highContrast, setHighContrast] = useState(false);
+  const chartRefs = useRef<Record<number, any>>({});
+  const [zoomPluginLoaded, setZoomPluginLoaded] = useState(false);
 
+  // Theme colors
+  const themes = {
+    solar: { primary: '#FFC107', secondary: '#4CAF50', accent: '#2196F3' },
+    wind: { primary: '#2196F3', secondary: '#4CAF50', accent: '#FFC107' },
+    hydro: { primary: '#26A69A', secondary: '#4CAF50', accent: '#2196F3' },
+  };
+  const currentTheme = themes[theme];
+
+  // Dynamically load chartjs-plugin-zoom on client side
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      import('chartjs-plugin-zoom').then((zoomPlugin) => {
+        ChartJS.register(zoomPlugin.default);
+        setZoomPluginLoaded(true);
+      }).catch((err) => {
+        console.error('Failed to load chartjs-plugin-zoom:', err);
+      });
+    }
+  }, []);
+
+  // Fetch predictions with polling
   useEffect(() => {
     const fetchPredictions = async () => {
       try {
@@ -49,12 +94,16 @@ export default function Dashboard() {
         setLoading(false);
       }
     };
-
     fetchPredictions();
+    const interval = setInterval(fetchPredictions, 30000);
+    return () => clearInterval(interval);
   }, []);
 
-  // Group predictions by month
-  const groupedByMonth = predictions.reduce((acc, prediction) => {
+  // Filter and group predictions
+  const filteredData = predictions.filter(
+    (p) => filters.hour === null || p.hour === filters.hour
+  );
+  const groupedByMonth = filteredData.reduce((acc, prediction) => {
     const month = prediction.month;
     if (!acc[month]) {
       acc[month] = [];
@@ -69,7 +118,7 @@ export default function Dashboard() {
     .filter((month) => month !== 5 && month !== 8)
     .sort((a, b) => a - b);
 
-  // Map month number to name for chart titles
+  // Map month number to name
   const monthNames = [
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
@@ -83,13 +132,44 @@ export default function Dashboard() {
     }));
   };
 
+  // Toggle collapse
+  const toggleCollapse = (month: number) => {
+    setCollapsedMonths((prev) => ({
+      ...prev,
+      [month]: !prev[month],
+    }));
+  };
+
+  // Export to CSV
+  const exportToCSV = (data: Prediction[], monthName: string) => {
+    const parser = new Parser();
+    const csv = parser.parse(data);
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `predictions_${monthName}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  // Reset zoom
+  const resetZoom = (month: number) => {
+    if (chartRefs.current[month]) {
+      chartRefs.current[month].resetZoom();
+    }
+  };
+
   if (loading)
     return (
       <p
         style={{
-          color: '#333333',
+          color: highContrast ? '#FFFFFF' : '#333333',
+          background: highContrast ? '#000000' : 'transparent',
           animation: 'pulse 1.5s infinite, shine 2s infinite',
-          textShadow: '0 0 4px rgba(33,150,243,0.3)',
+          textShadow: `0 0 4px ${currentTheme.accent}33`,
+          padding: '10px',
+          textAlign: 'center',
         }}
       >
         Chargement des données...
@@ -99,9 +179,12 @@ export default function Dashboard() {
     return (
       <p
         style={{
-          color: '#D32F2F',
+          color: highContrast ? '#FF5555' : '#D32F2F',
+          background: highContrast ? '#000000' : 'transparent',
           animation: 'fadeIn 0.5s ease-in-out',
-          textShadow: '0 0 4px rgba(211,47,47,0.3)',
+          textShadow: `0 0 4px ${highContrast ? '#FF5555' : '#D32F2F'}33`,
+          padding: '10px',
+          textAlign: 'center',
         }}
       >
         Erreur : {error}
@@ -114,236 +197,148 @@ export default function Dashboard() {
         padding: '15px',
         maxWidth: '1400px',
         margin: '0 auto',
-        background: 'linear-gradient(180deg, #E3F2FD, #F5F5F5)',
+        background: highContrast
+          ? '#000000'
+          : `linear-gradient(180deg, ${currentTheme.accent}22, #F5F5F5)`,
         minHeight: '100vh',
         position: 'relative',
         overflow: 'hidden',
       }}
     >
-      <h1
+      <div
         style={{
-          fontSize: '1.75rem',
-          fontWeight: 'bold',
-          color: '#2196F3',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          background: `radial-gradient(circle, ${currentTheme.secondary}11 0%, transparent 70%)`,
+          animation: 'energyWave 10s infinite ease-in-out',
+          pointerEvents: 'none',
+          opacity: highContrast ? 0 : 0.5,
+        }}
+      />
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <h1
+          style={{
+            fontSize: '1.75rem',
+            fontWeight: 'bold',
+            color: highContrast ? '#FFFFFF' : currentTheme.accent,
+            animation: 'fadeIn 0.7s ease-in-out, shine 3s infinite',
+            textShadow: `0 0 4px ${currentTheme.accent}33`,
+          }}
+        >
+          Energy Predictions Dashboard
+        </h1>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <select
+            onChange={(e) => setTheme(e.target.value as 'solar' | 'wind' | 'hydro')}
+            style={{
+              padding: '8px',
+              background: `linear-gradient(45deg, ${currentTheme.secondary}, ${currentTheme.secondary}cc)`,
+              color: '#FFFFFF',
+              border: 'none',
+              borderRadius: '4px',
+              fontSize: '0.9rem',
+              cursor: 'pointer',
+              animation: 'shine 3s infinite ease-in-out',
+            }}
+            aria-label="Select theme"
+          >
+            <option value="solar">Solar Theme</option>
+            <option value="wind">Wind Theme</option>
+            <option value="hydro">Hydro Theme</option>
+          </select>
+          <button
+            onClick={() => setHighContrast((prev) => !prev)}
+            onKeyDown={(e) => e.key === 'Enter' && setHighContrast((prev) => !prev)}
+            style={{
+              padding: '8px',
+              background: highContrast ? '#FFFFFF' : `linear-gradient(45deg, ${currentTheme.accent}, ${currentTheme.accent}cc)`,
+              color: highContrast ? '#000000' : '#FFFFFF',
+              border: 'none',
+              borderRadius: '4px',
+              fontSize: '0.9rem',
+              cursor: 'pointer',
+              animation: 'shine 3s infinite ease-in-out',
+            }}
+            aria-label={highContrast ? 'Switch to normal mode' : 'Switch to high contrast mode'}
+          >
+            {highContrast ? 'Normal Mode' : 'High Contrast'}
+          </button>
+        </div>
+      </div>
+      <div
+        style={{
           marginBottom: '20px',
-          animation: 'fadeIn 0.7s ease-in-out, shine 3s infinite',
-          textShadow: '0 0 4px rgba(33,150,243,0.3)',
+          padding: '10px',
+          background: highContrast ? '#222222' : `linear-gradient(180deg, #FFFFFF, ${currentTheme.primary}11)`,
+          borderRadius: '8px',
+          boxShadow: `0 2px 6px rgba(0,0,0,0.1), 0 0 8px ${currentTheme.secondary}33`,
         }}
       >
-        Energy Predictions Dashboard
-      </h1>
+        <label
+          style={{
+            fontSize: '0.9rem',
+            color: highContrast ? '#FFFFFF' : '#333333',
+            marginRight: '10px',
+          }}
+        >
+          Filter by Hour:
+        </label>
+        <select
+          onChange={(e) => setFilters({ hour: e.target.value ? Number(e.target.value) : null })}
+          style={{
+            padding: '8px',
+            background: `linear-gradient(45deg, ${currentTheme.secondary}, ${currentTheme.secondary}cc)`,
+            color: '#FFFFFF',
+            border: 'none',
+            borderRadius: '4px',
+            fontSize: '0.9rem',
+            cursor: 'pointer',
+            animation: 'shine 3s infinite ease-in-out',
+          }}
+          aria-label="Filter by hour"
+        >
+          <option value="">All Hours</option>
+          {[...Array(24)].map((_, i) => (
+            <option key={i} value={i}>
+              {i}:00
+            </option>
+          ))}
+        </select>
+      </div>
       {months.length === 0 ? (
         <p
           style={{
-            color: '#333333',
+            color: highContrast ? '#FFFFFF' : '#333333',
+            background: highContrast ? '#000000' : 'transparent',
             animation: 'fadeIn 0.5s ease-in-out',
-            textShadow: '0 0 4px rgba(0,0,0,0.2)',
+            textShadow: `0 0 4px rgba(0,0,0,${highContrast ? 0.5 : 0.2})`,
+            padding: '10px',
+            textAlign: 'center',
           }}
         >
           Aucune donnée disponible pour le moment.
         </p>
       ) : (
-        months.map((month) => {
-          const monthData = groupedByMonth[month];
-          const monthName = monthNames[month - 1] || `Month ${month}`;
-          const isTableHidden = hiddenTables[month] || false;
-
-          // Prepare chart data
-          const chartData = {
-            labels: monthData.map((p) =>
-              new Date(p.prediction_day).toLocaleDateString()
-            ),
-            datasets: [
-              {
-                label: 'Energy Produced (kWh)',
-                data: monthData.map((p) => p.energyproduced),
-                borderColor: '#FFC107',
-                backgroundColor: 'rgba(255, 193, 7, 0.3)',
-                fill: true,
-                tension: 0.4,
-                pointBackgroundColor: '#FFC107',
-                pointBorderColor: '#FFFFFF',
-                pointHoverBackgroundColor: '#FFA000',
-                pointHoverBorderColor: '#FFFFFF',
-                pointRadius: 4,
-                pointHoverRadius: 6,
-                pointStyle: 'circle',
-                pointShadow: '0 0 8px rgba(255,193,7,0.5)', // Reflective glow
-              },
-            ],
-          };
-
-          const chartOptions: ChartOptions<'line'> = {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: {
-                position: 'top',
-                labels: { color: '#333333', font: { size: 12 } },
-              },
-              title: {
-                display: true,
-                text: `Energy Produced in ${monthName}`,
-                color: '#2196F3',
-                font: { size: 16 },
-                padding: { top: 10, bottom: 10 },
-              },
-              tooltip: {
-                backgroundColor: 'rgba(33, 150, 243, 0.8)',
-                titleColor: '#FFFFFF',
-                bodyColor: '#FFFFFF',
-                borderColor: '#2196F3',
-                borderWidth: 1,
-              },
-            },
-            scales: {
-              x: {
-                title: { display: true, text: 'Prediction Day', color: '#333333' },
-                grid: { color: '#E0E0E0' },
-              },
-              y: {
-                title: { display: true, text: 'Energy Produced (kWh)', color: '#333333' },
-                grid: { color: '#E0E0E0' },
-              },
-            },
-            animation: {
-              duration: 1000,
-              easing: 'easeOutQuart' as const,
-            },
-            hover: {
-              mode: 'point',
-              intersect: true,
-            },
-          };
-
-          return (
-            <div
-              key={month}
-              style={{
-                marginBottom: '20px',
-                padding: '15px',
-                border: '1px solid rgba(224,224,224,0.5)',
-                borderRadius: '8px',
-                background: 'linear-gradient(145deg, #FFFFFF, #F1F8E9)',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.15), 0 0 8px rgba(76,175,80,0.2)',
-                display: 'flex',
-                flexDirection: 'row',
-                gap: '20px',
-                alignItems: 'flex-start',
-                animation: 'fadeInScale 0.6s ease-in-out',
-                position: 'relative',
-                overflow: 'hidden',
-              }}
-            >
-              <div
-                style={{
-                  flex: '1',
-                  maxWidth: '50%',
-                  transition: 'all 0.3s ease',
-                  position: 'relative',
-                }}
-              >
-                <button
-                  onClick={() => toggleTable(month)}
-                  style={{
-                    marginBottom: '10px',
-                    padding: '8px 16px',
-                    background: 'linear-gradient(45deg, #388E3C, #4CAF50)',
-                    color: '#FFFFFF',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '0.9rem',
-                    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                    boxShadow: '0 2px 6px rgba(0,0,0,0.2), 0 0 8px rgba(76,175,80,0.3)',
-                    animation: 'shine 3s infinite ease-in-out',
-                    position: 'relative',
-                    overflow: 'hidden',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'scale(1.05)';
-                    e.currentTarget.style.boxShadow = '0 4px 10px rgba(0,0,0,0.3), 0 0 12px rgba(76,175,80,0.5)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'scale(1)';
-                    e.currentTarget.style.boxShadow = '0 2px 6px rgba(0,0,0,0.2), 0 0 8px rgba(76,175,80,0.3)';
-                  }}
-                >
-                  {isTableHidden ? 'Show Table' : 'Hide Table'}
-                  <div
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: '-100%',
-                      width: '100%',
-                      height: '100%',
-                      background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)',
-                      animation: 'shineOverlay 2s infinite ease-in-out',
-                    }}
-                  />
-                </button>
-                {isTableHidden ? (
-                  <div
-                    style={{
-                      padding: '12px',
-                      background: 'linear-gradient(180deg, #E8F5E9, #F1F8E9)',
-                      border: '1px solid rgba(76,175,80,0.5)',
-                      borderRadius: '6px',
-                      color: '#333333',
-                      fontSize: '0.9rem',
-                      lineHeight: '1.5',
-                      boxShadow: '0 2px 6px rgba(0,0,0,0.1), 0 0 8px rgba(76,175,80,0.3)',
-                      animation: 'fadeInScale 0.4s ease-in-out',
-                      position: 'relative',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    <h3
-                      style={{
-                        fontSize: '1.1rem',
-                        fontWeight: 'bold',
-                        color: '#388E3C',
-                        marginBottom: '8px',
-                        transition: 'color 0.3s ease, text-shadow 0.3s ease',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.color = '#2196F3';
-                        e.currentTarget.style.textShadow = '0 0 4px rgba(33,150,243,0.3)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.color = '#388E3C';
-                        e.currentTarget.style.textShadow = 'none';
-                      }}
-                    >
-                      About the Chart
-                    </h3>
-                    <p>
-                      This chart visualizes predicted energy production (in kWh) for {monthName}.
-                      The x-axis shows prediction dates, while the y-axis displays energy output.
-                      Use this to identify trends and optimize renewable energy systems like solar or wind power.
-                    </p>
-                    <div
-                      style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: '-100%',
-                        width: '100%',
-                        height: '100%',
-                        background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)',
-                        animation: 'shineOverlay 3s infinite ease-in-out',
-                      }}
-                    />
-                  </div>
-                ) : (
-                  <PredictionsTable data={monthData} month={month} />
-                )}
-              </div>
-              <div style={{ flex: '1', maxWidth: '50%', height: '300px', position: 'relative' }}>
-                <Line data={chartData} options={chartOptions} />
-              </div>
-            </div>
-          );
-        })
+        months.map((month) => (
+          <MonthSection
+            key={month}
+            month={month}
+            monthData={groupedByMonth[month]}
+            monthName={monthNames[month - 1] || `Month ${month}`}
+            theme={theme}
+            highContrast={highContrast}
+            isTableHidden={hiddenTables[month] || false}
+            isCollapsed={collapsedMonths[month] || false}
+            zoomPluginLoaded={zoomPluginLoaded}
+            toggleTable={toggleTable}
+            toggleCollapse={toggleCollapse}
+            exportToCSV={exportToCSV}
+            resetZoom={() => resetZoom(month)}
+          />
+        ))
       )}
       <style>{`
         @keyframes fadeIn {
@@ -371,6 +366,19 @@ export default function Dashboard() {
           0% { left: -100%; }
           50% { left: 100%; }
           100% { left: 100%; }
+        }
+        @keyframes energyWave {
+          0% { transform: scale(1); opacity: 0.3; }
+          50% { transform: scale(1.2); opacity: 0.5; }
+          100% { transform: scale(1); opacity: 0.3; }
+        }
+        @media (max-width: 768px) {
+          div[style*="flex-direction: row"] {
+            flex-direction: column;
+          }
+          div[style*="max-width: 50%"] {
+            max-width: 100% !important;
+          }
         }
       `}</style>
     </div>

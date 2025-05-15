@@ -10,9 +10,10 @@ import { Prediction } from '../types/prediction';
 interface PredictionsTableProps {
   data: Prediction[];
   month: number;
+  theme: string; // Added for theme customization
 }
 
-const PredictionsTable: React.FC<PredictionsTableProps> = ({ data, month }) => {
+const PredictionsTable: React.FC<PredictionsTableProps> = ({ data, month, theme }) => {
   const columns: ColumnDef<Prediction>[] = React.useMemo(
     () => [
       { header: 'ID', accessorKey: 'id' },
@@ -47,6 +48,14 @@ const PredictionsTable: React.FC<PredictionsTableProps> = ({ data, month }) => {
   ];
   const monthName = monthNames[month - 1] || `Month ${month}`;
 
+  // Theme colors
+  const themes = {
+    solar: { primary: '#FFC107', secondary: '#4CAF50', accent: '#2196F3' },
+    wind: { primary: '#2196F3', secondary: '#4CAF50', accent: '#FFC107' },
+    hydro: { primary: '#26A69A', secondary: '#4CAF50', accent: '#2196F3' },
+  };
+  const currentTheme = themes[theme as keyof typeof themes] || themes.solar;
+
   return (
     <div
       style={{
@@ -59,21 +68,24 @@ const PredictionsTable: React.FC<PredictionsTableProps> = ({ data, month }) => {
         style={{
           fontSize: '1.25rem',
           fontWeight: 'bold',
-          color: '#388E3C',
+          color: currentTheme.secondary,
           marginBottom: '8px',
           transition: 'color 0.3s ease',
+          textShadow: `0 0 4px ${currentTheme.secondary}33`,
         }}
       >
         Predictions for {monthName}
       </h2>
       <div style={{ overflowX: 'auto' }}>
         <table
+          role="grid"
+          aria-label={`Predictions table for ${monthName}`}
           style={{
-            border: '1px solid #E0E0E0',
+            border: `1px solid #E0E0E0`,
             width: '100%',
             borderCollapse: 'collapse',
             fontSize: '0.9rem',
-            background: 'linear-gradient(180deg, #FFFFFF, #F1F8E9)',
+            background: `linear-gradient(180deg, #FFFFFF, ${currentTheme.primary}11)`,
             boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
           }}
         >
@@ -86,7 +98,7 @@ const PredictionsTable: React.FC<PredictionsTableProps> = ({ data, month }) => {
                     style={{
                       border: '1px solid #E0E0E0',
                       padding: '8px',
-                      background: 'linear-gradient(45deg, #4CAF50, #388E3C)',
+                      background: `linear-gradient(45deg, ${currentTheme.secondary}, ${currentTheme.secondary}cc)`,
                       color: '#FFFFFF',
                       textAlign: 'left',
                       position: 'relative',
@@ -95,10 +107,10 @@ const PredictionsTable: React.FC<PredictionsTableProps> = ({ data, month }) => {
                       animation: 'shine 3s infinite ease-in-out',
                     }}
                     onMouseEnter={(e) =>
-                      (e.currentTarget.style.background = 'linear-gradient(45deg, #66BB6A, #4CAF50)')
+                      (e.currentTarget.style.background = `linear-gradient(45deg, ${currentTheme.secondary}cc, ${currentTheme.secondary})`)
                     }
                     onMouseLeave={(e) =>
-                      (e.currentTarget.style.background = 'linear-gradient(45deg, #4CAF50, #388E3C)')
+                      (e.currentTarget.style.background = `linear-gradient(45deg, ${currentTheme.secondary}, ${currentTheme.secondary}cc)`)
                     }
                   >
                     {header.isPlaceholder
@@ -148,7 +160,7 @@ const PredictionsTable: React.FC<PredictionsTableProps> = ({ data, month }) => {
                       transition: 'background 0.2s ease',
                     }}
                     onMouseEnter={(e) =>
-                      (e.currentTarget.style.background = '#E8F5E9')
+                      (e.currentTarget.style.background = `${currentTheme.primary}22`)
                     }
                     onMouseLeave={(e) =>
                       (e.currentTarget.style.background = '#FFFFFF')
