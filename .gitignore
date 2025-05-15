@@ -40,9 +40,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-src/app/api/monitor/route.ts
-cd ..
 
-// Hardcoded SendGrid API key
-const SENDGRID_API_KEY =
- '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';
+
+
