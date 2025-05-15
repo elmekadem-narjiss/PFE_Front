@@ -35,8 +35,14 @@ export default function Navbar({ isOpen, onToggle }: NavbarProps) {
               Settings
             </a>
           </li>
+          <li className={styles.navItem}>
+            <a href="/dashboard/monitoring" className={styles.navLink}>
+             Monitoring
+            </a>
+          </li>
         </ul>
       </nav>
     </>
   );
 }
+

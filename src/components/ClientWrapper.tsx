@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Navbar from './Navbar';
 import { BatteryProvider } from '@/context/BatteryContext';
+import { SettingsProvider } from '@/context/SettingsContext';
 
 export default function ClientWrapper({
   children,
@@ -24,9 +25,11 @@ export default function ClientWrapper({
   }, [isOpen]);
 
   return (
-    <BatteryProvider>
-      <Navbar onToggle={toggleMenu} isOpen={isOpen} />
-      <main>{children}</main>
-    </BatteryProvider>
+    <SettingsProvider>
+      <BatteryProvider>
+        <Navbar onToggle={toggleMenu} isOpen={isOpen} />
+        <main>{children}</main>
+      </BatteryProvider>
+    </SettingsProvider>
   );
 }
