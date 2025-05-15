@@ -1,0 +1,64 @@
+.container {
+  padding: 20px;
+  background-color: #1a1a2e;
+  color: #fff;
+}
+
+.chartContainer {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.downloadButton {
+  display: block;
+  margin: 20px auto;
+  padding: 10px 20px;
+  background-color: #16a085;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.downloadButton:disabled {
+  background-color: #666;
+  cursor: not-allowed;
+}
+
+.reportTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.reportTable th,
+.reportTable td {
+  padding: 10px;
+  text-align: left;
+  border: 1px solid #333;
+}
+
+.reportTable th {
+  background-color: #16a085;
+  color: white;
+}
+
+.reportTable tr:nth-child(even) {
+  background-color: #2d2d44;
+}
+
+.failedRow {
+  background-color: #ef4444 !important;
+  color: white;
+}
+
+.warningRowTemp {
+  background-color: #ffd700 !important;
+  color: black;
+}
+
+.noData {
+  text-align: center;
+  color: #ff6b6b;
+}

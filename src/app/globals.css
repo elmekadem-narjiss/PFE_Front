@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-geist-sans), sans-serif;
+  background: linear-gradient(135deg, #0d1117 0%, #1a202c 100%);
+  color: #e5e7eb;
+  overflow-x: hidden;
+}
+
+main {
+  padding: 2rem;
+  margin-left: 0; /* Default state (sidebar closed) */
+  transition: margin-left 0.3s ease; /* Smooth transition for content shift */
+}
+
+body.sidebar-open main {
+  margin-left: 250px; /* Shift content when sidebar is open */
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  body.sidebar-open main {
+    margin-left: 200px; /* Adjust for narrower sidebar on mobile */
+  }
+}
