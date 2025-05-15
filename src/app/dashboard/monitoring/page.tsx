@@ -4,9 +4,15 @@ import { useState, useEffect } from 'react';
 import { StoredEquipmentData, EquipmentMetrics } from '../../../types/equipment';
 import { useSettings } from '../../../context/SettingsContext';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { FaSort, FaSun, FaMoon } from 'react-icons/fa';
+import { FaSort, FaSun, FaMoon, FaExclamationTriangle, FaCheck, FaTimes } from 'react-icons/fa';
 import styles from './Monitoring.module.css';
-import { connectWebSocket, disconnectWebSocket } from '../../../services/websocketService';
+
+interface Alert {
+  message: string;
+  sent: boolean;
+  error?: string;
+  timestamp: string;
+}
 
 const Monitoring = () => {
   const { settings } = useSettings();
@@ -23,39 +29,70 @@ const Monitoring = () => {
     humidity: true,
   });
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({ key: 'equipmentId', direction: 'asc' });
+  const [alerts, setAlerts] = useState<Alert[]>([]);
 
   useEffect(() => {
     setLoading(true);
-    connectWebSocket((data: StoredEquipmentData) => {
-      setEquipmentData((prevData) => {
-        // Trouver un équipement existant avec le même equipmentId
-        const existingEquipmentIndex = prevData.findIndex((equip) => equip.equipmentId === data.equipmentId);
-        let updatedData: StoredEquipmentData[];
-
-        if (existingEquipmentIndex !== -1) {
-          // Mettre à jour les métriques de l'équipement existant
-          const updatedEquipment = { ...prevData[existingEquipmentIndex] };
-          updatedEquipment.metrics = [...updatedEquipment.metrics, ...data.metrics].slice(-5); // Limiter à 5 métriques par équipement
-          updatedData = [
-            ...prevData.slice(0, existingEquipmentIndex),
-            updatedEquipment,
-            ...prevData.slice(existingEquipmentIndex + 1),
-          ];
-        } else {
-          // Ajouter un nouvel équipement
-          updatedData = [...prevData, { ...data, metrics: data.metrics.slice(-5) }].slice(-20); // Limiter à 20 équipements
+    const fetchMetrics = async () => {
+      try {
+        const response = await fetch('/api/monitor');
+        if (!response.ok) {
+          const text = await response.text();
+          console.error('Non-JSON response received:', text);
+          throw new Error(`HTTP error! Status: ${response.status}, Body: ${text}`);
         }
 
-        console.log('Updated equipment data:', updatedData);
-        return updatedData;
-      });
-      setLoading(false);
-      setError(null);
-    });
+        const data = await response.json();
+        if (data.error) throw new Error(data.error);
 
-    return () => {
-      disconnectWebSocket();
+        const equipmentId = 'local-server';
+        const newMetricEntry = {
+          timestamp: new Date().toISOString(),
+          metrics: {
+            cpuUsage: data.metrics.cpuUsage,
+            ramUsage: data.metrics.ramUsage,
+            storageUsed: data.metrics.storageUsed,
+            energyProduced: 0,
+            temperature: data.metrics.temperature,
+            humidity: 0,
+          } as EquipmentMetrics,
+        };
+
+        setEquipmentData((prev) => {
+          const existingIndex = prev.findIndex((equip) => equip.equipmentId === equipmentId);
+          if (existingIndex !== -1) {
+            const updatedMetrics = [...prev[existingIndex].metrics, newMetricEntry].slice(-5);
+            return [
+              ...prev.slice(0, existingIndex),
+              { ...prev[existingIndex], metrics: updatedMetrics },
+              ...prev.slice(existingIndex + 1),
+            ].slice(-20);
+          } else {
+            return [
+              ...prev,
+              { equipmentId, type: 'server', metrics: [newMetricEntry] },
+            ].slice(-20);
+          }
+        });
+
+        if (data.alerts.length > 0) {
+          const newAlerts = data.alerts.map((msg: string) => ({
+            message: msg,
+            sent: true,
+            timestamp: new Date().toLocaleString(),
+          }));
+          setAlerts((prev) => [...prev, ...newAlerts].slice(-10));
+        }
+      } catch (err) {
+        setError(`Monitoring Error: ${(err as Error).message}`);
+      } finally {
+        setLoading(false);
+      }
     };
+
+    fetchMetrics();
+    const interval = setInterval(fetchMetrics, 10000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleMetricToggle = (metric: keyof typeof metricVisibility) => {
@@ -78,7 +115,7 @@ const Monitoring = () => {
 
   const getChartData = (equip: StoredEquipmentData, metric: keyof EquipmentMetrics, label: string) => {
     return equip.metrics.map((m) => ({
-      timestamp: new Date(m.timestamp).toLocaleTimeString(), // Utiliser l'heure pour un affichage en temps réel
+      timestamp: new Date(m.timestamp).toLocaleTimeString(),
       [label]: m.metrics[metric] ?? 0,
     }));
   };
@@ -104,6 +141,25 @@ const Monitoring = () => {
           {darkMode ? <FaSun /> : <FaMoon />}
         </button>
       </div>
+
+      {alerts.length > 0 && (
+        <div className={styles.alertsContainer}>
+          <h3>Alerts</h3>
+          <ul>
+            {alerts.map((alert, index) => (
+              <li key={index} className={styles.alert}>
+                <FaExclamationTriangle className={styles.alertIcon} /> {alert.message} (at {alert.timestamp})
+                {alert.sent ? <FaCheck className={styles.successIcon} title="Email sent" /> : null}
+                {alert.error && <FaTimes className={styles.errorIcon} title={alert.error} />}
+              </li>
+            ))}
+          </ul>
+          <button onClick={() => setAlerts([])} className={styles.clearAlertsButton}>
+            Clear Alerts
+          </button>
+        </div>
+      )}
+
       <div className={styles.sectionsContainer}>
         <section className={styles.section}>
           <h2 className={styles.sectionTitle}>Material Management</h2>
@@ -303,7 +359,7 @@ const Monitoring = () => {
           </div>
 
           <div className={styles.tableContainer}>
-            <h3>All Equipment Data</h3>
+            <h3>All Equipment Data ({equipmentData.length} equipment{equipmentData.length !== 1 ? 's' : ''})</h3>
             <table className={styles.table}>
               <thead>
                 <tr>
