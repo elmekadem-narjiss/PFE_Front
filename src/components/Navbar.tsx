@@ -40,6 +40,11 @@ export default function Navbar({ isOpen, onToggle }: NavbarProps) {
              Monitoring
             </a>
           </li>
+          <li className={styles.navItem}>
+            <a href="/todolist" className={styles.navLink}>
+             ToDoList
+            </a>
+          </li>
         </ul>
       </nav>
     </>

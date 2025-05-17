@@ -4,7 +4,7 @@ import { Pool } from 'pg';
 import sgMail from '@sendgrid/mail';
 
 // Hardcoded SendGrid API key
-const SENDGRID_API_KEY ='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';
+const SENDGRID_API_KEY ='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';
 
 
 // Initialize PostgreSQL Pool with hardcoded credentials
