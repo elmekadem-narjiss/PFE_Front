@@ -1,6 +1,7 @@
 import { fetchTasks, createTask, updateTaskStatus, deleteTask, updateTask } from '../taskService';
 import { Task } from '../../types/task';
 
+// Mock de la fonction fetch
 beforeEach(() => {
   global.fetch = jest.fn();
 });
@@ -11,6 +12,7 @@ afterEach(() => {
 
 describe('taskService', () => {
   test('fetchTasks should return tasks when API call succeeds', async () => {
+    // Mock de la réponse de l'API
     const mockTasks: Task[] = [
       { id: 1, title: 'Task 1', description: 'Description 1', status: 'todo', priority: 'high' },
       { id: 2, title: 'Task 2', description: 'Description 2', status: 'done', priority: 'low' },

@@ -1,15 +1,16 @@
 export default {
-    preset: 'ts-jest/presets/js-with-ts', // Utilise un preset qui inclut JSX
-    testEnvironment: 'jsdom',
-    testMatch: ['**/?(*.)+(spec|test).[jt]s?(x)'],
-    coverageDirectory: 'coverage',
-    coverageReporters: ['lcov'],
-    moduleNameMapper: {
-      '^@/(.*)$': '<rootDir>/src/$1',
-      '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
-    },
-    setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
-    transform: {
-      '^.+\\.(ts|tsx)$': 'ts-jest', // Assure que ts-jest traite les fichiers .ts et .tsx
-    },
-  };
+  testEnvironment: 'jsdom',
+  testMatch: ['**/?(*.)+(spec|test).[jt]s?(x)'],
+  coverageDirectory: 'coverage',
+  coverageReporters: ['lcov'],
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/src/$1',
+    '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
+    '^msw/node$': '<rootDir>/node_modules/msw/lib/node/index.js', // Map msw/node
+  },
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
+  transform: {
+    '^.+\\.(ts|tsx|js|jsx)$': 'babel-jest',
+    '^.+\\.ts$': 'ts-jest',
+  },
+};

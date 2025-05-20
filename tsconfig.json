@@ -21,9 +21,9 @@
     "paths": {
       "@/*": ["./src/*"]
     },
-    "types": ["node"], // Ensure Node.js types are included
-    "typeRoots": ["./node_modules/@types", "./src/types"] // Add custom types directory
+    "types": ["node", "jest", "@testing-library/jest-dom"],
+    "typeRoots": ["./node_modules/@types", "./src/types"]
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/types/**/*.d.ts"], // Include custom type declarations
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/types/**/*.d.ts", "jest.setup.ts"],
   "exclude": ["node_modules"]
 }
