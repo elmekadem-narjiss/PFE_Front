@@ -4,12 +4,13 @@ on:
   push:
     branches: [main]
     paths:
-      - 'new-app/**'  # S'exécute uniquement si des changements sont dans le dossier new-app
+      - 'new-app/**'
   pull_request:
     branches: [main]
     types: [opened, synchronize, reopened]
     paths:
       - 'new-app/**'
+  workflow_dispatch: 
 
 env:
   NODE_VERSION: '22'
@@ -19,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: new-app  # Définit le dossier de travail comme new-app
+        working-directory: new-app
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
