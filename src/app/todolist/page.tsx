@@ -46,6 +46,7 @@ function SortableItem({ task, onEdit, onDelete }: { task: Task; onEdit: (task: T
       <div className="task-content">
         <h3>{task.title}</h3>
         <p>{task.description}</p>
+        <p className="priority" data-priority={task.priority}>Priority: {task.priority}</p>
       </div>
       <div className="btn-group">
         <button onClick={() => onEdit(task)} className="edit-btn">Edit</button>
@@ -57,10 +58,11 @@ function SortableItem({ task, onEdit, onDelete }: { task: Task; onEdit: (task: T
 
 export default function TodoListPage() {
   const [columns, setColumns] = useState(initialColumns);
-  const [newTask, setNewTask] = useState({ title: '', description: '', status: 'todo' as const });
+  const [newTask, setNewTask] = useState({ title: '', description: '', status: 'todo' as const, priority: 'medium' as 'high' | 'medium' | 'low' });
   const [editTask, setEditTask] = useState<Task | null>(null);
-  const [editedTask, setEditedTask] = useState({ title: '', description: '' });
+  const [editedTask, setEditedTask] = useState({ title: '', description: '', priority: 'medium' as 'high' | 'medium' | 'low' });
   const [addingInColumn, setAddingInColumn] = useState<string | null>(null);
+  const [filterPriority, setFilterPriority] = useState<string>('all');
 
   useEffect(() => {
     const loadTasks = async () => {
@@ -68,7 +70,9 @@ export default function TodoListPage() {
         const tasks = await fetchTasks();
         const updatedColumns = { ...initialColumns };
         tasks.forEach((task) => {
-          updatedColumns[task.status].items.push(task);
+          if (filterPriority === 'all' || task.priority === filterPriority) {
+            updatedColumns[task.status].items.push(task);
+          }
         });
         setColumns(updatedColumns);
       } catch (error) {
@@ -76,7 +80,7 @@ export default function TodoListPage() {
       }
     };
     loadTasks();
-  }, []);
+  }, [filterPriority]);
 
   const handleAddTask = async (status: string) => {
     if (!newTask.title.trim()) {
@@ -85,8 +89,8 @@ export default function TodoListPage() {
     }
 
     try {
-      const addedTask = await createTask(newTask.title, newTask.description || '', status);
-      if (addedTask) {
+      const addedTask = await createTask(newTask.title, newTask.description || '', status, newTask.priority);
+      if (addedTask && (filterPriority === 'all' || addedTask.priority === filterPriority)) {
         setColumns((prev) => ({
           ...prev,
           [status]: {
@@ -94,7 +98,7 @@ export default function TodoListPage() {
             items: [...prev[status].items, addedTask],
           },
         }));
-        setNewTask({ title: '', description: '', status: 'todo' as const });
+        setNewTask({ title: '', description: '', status: 'todo' as const, priority: 'medium' as 'high' | 'medium' | 'low' });
         setAddingInColumn(null);
       } else {
         console.error('Failed to add task: No response from createTask');
@@ -109,19 +113,19 @@ export default function TodoListPage() {
 
   const handleStartAdding = (columnId: string) => {
     setAddingInColumn(columnId);
-    setNewTask({ title: '', description: '', status: columnId as any });
+    setNewTask({ title: '', description: '', status: columnId as any, priority: 'medium' as 'high' | 'medium' | 'low' });
   };
 
   const handleCancelAdding = () => {
     setAddingInColumn(null);
-    setNewTask({ title: '', description: '', status: 'todo' as const });
+    setNewTask({ title: '', description: '', status: 'todo' as const, priority: 'medium' as 'high' | 'medium' | 'low' });
   };
 
   const handleEditTask = async () => {
     if (!editTask || !editedTask.title) return;
 
     try {
-      const updatedTask = await updateTask(editTask.id, editedTask.title, editedTask.description, editTask.status);
+      const updatedTask = await updateTask(editTask.id, editedTask.title, editedTask.description, editTask.status, editedTask.priority);
       setColumns((prev) => {
         const newColumns = { ...prev };
         newColumns[updatedTask.status].items = newColumns[updatedTask.status].items.map(t =>
@@ -130,7 +134,7 @@ export default function TodoListPage() {
         return newColumns;
       });
       setEditTask(null);
-      setEditedTask({ title: '', description: '' });
+      setEditedTask({ title: '', description: '', priority: 'medium' as 'high' | 'medium' | 'low' });
     } catch (error) {
       console.error('Error editing task:', error);
     }
@@ -138,7 +142,7 @@ export default function TodoListPage() {
 
   const handleStartEdit = (task: Task) => {
     setEditTask(task);
-    setEditedTask({ title: task.title, description: task.description || '' });
+    setEditedTask({ title: task.title, description: task.description || '', priority: task.priority || 'medium' });
   };
 
   const handleDeleteTask = async (id: number) => {
@@ -208,16 +212,30 @@ export default function TodoListPage() {
         const tasks = await fetchTasks();
         const updatedColumns = { ...initialColumns };
         tasks.forEach((task) => {
-          updatedColumns[task.status].items.push(task);
+          if (filterPriority === 'all' || task.priority === filterPriority) {
+            updatedColumns[task.status].items.push(task);
+          }
         });
         setColumns(updatedColumns);
       }
     }
   };
 
+  const totalTasks = Object.values(columns).reduce((sum, column) => sum + column.items.length, 0);
+  const completedTasks = columns.done.items.length;
+
   return (
     <div>
       <h1 className="color3">Energy Management Dashboard</h1>
+      <div className="filter-section">
+        <label className="color2">Filter by Priority: </label>
+        <select value={filterPriority} onChange={(e) => setFilterPriority(e.target.value)} className="filter-select">
+          <option value="all">All</option>
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+        </select>
+      </div>
 
       <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <div className="board">
@@ -250,6 +268,15 @@ export default function TodoListPage() {
                       onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
                       className="add-input"
                     />
+                    <select
+                      value={newTask.priority}
+                      onChange={(e) => setNewTask({ ...newTask, priority: e.target.value as 'high' | 'medium' | 'low' })}
+                      className="add-input"
+                    >
+                      <option value="high">High</option>
+                      <option value="medium">Medium</option>
+                      <option value="low">Low</option>
+                    </select>
                     <div className="add-actions">
                       <button onClick={() => handleAddTask(columnId)} className="add-btn">Add Task</button>
                       <button onClick={handleCancelAdding} className="cancel-btn">Cancel</button>
@@ -263,6 +290,12 @@ export default function TodoListPage() {
           ))}
         </div>
       </DndContext>
+
+      <div className="stats-section">
+        <h3 className="color2">Statistics</h3>
+        <p>Total Tasks: {totalTasks}</p>
+        <p>Completed Tasks: {completedTasks} ({completedTasks / totalTasks * 100 || 0}%)</p>
+      </div>
 
       {editTask && (
         <div className="modal">
@@ -282,10 +315,19 @@ export default function TodoListPage() {
                 onChange={(e) => setEditedTask({ ...editedTask, description: e.target.value })}
                 className="color3"
               />
+              <select
+                value={editedTask.priority}
+                onChange={(e) => setEditedTask({ ...editedTask, priority: e.target.value as 'high' | 'medium' | 'low' })}
+                className="color3"
+              >
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
               <div className="flex space-x-3">
                 <button onClick={handleEditTask} className="save-btn color4">Save</button>
                 <button
-                  onClick={() => { setEditTask(null); setEditedTask({ title: '', description: '' }); }}
+                  onClick={() => { setEditTask(null); setEditedTask({ title: '', description: '', priority: 'medium' as 'high' | 'medium' | 'low' }); }}
                   className="cancel-btn color2"
                 >
                   Cancel
