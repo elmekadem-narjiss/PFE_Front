@@ -4,12 +4,13 @@ on:
   push:
     branches: [main]
     paths:
-      - 'new-app/**'  # S'exécute uniquement si des changements sont dans le dossier new-app
+      - '**'
   pull_request:
     branches: [main]
     types: [opened, synchronize, reopened]
     paths:
-      - 'new-app/**'
+      - '**'
+  workflow_dispatch:
 
 env:
   NODE_VERSION: '22'
@@ -17,9 +18,6 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: new-app  # Définit le dossier de travail comme new-app
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -33,3 +31,21 @@ jobs:
         run: npm run build
       - name: Check Build Output
         run: ls -la .next/ || echo "Build output not found"
+
+  test:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Install Dependencies
+        run: npm install
+      - name: Run Tests with Jest
+        run: npx jest --coverage --coverageReporters=lcov
+      - name: Check Coverage Output
+        run: |
+          ls -la coverage/ && cat coverage/lcov.info || echo "Coverage report not generated"
