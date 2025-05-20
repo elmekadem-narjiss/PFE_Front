@@ -4,13 +4,13 @@ on:
   push:
     branches: [main]
     paths:
-      - 'new-app/**'
+      - '**'  # S'exécute pour tous les changements dans le dépôt
   pull_request:
     branches: [main]
     types: [opened, synchronize, reopened]
     paths:
-      - 'new-app/**'
-  workflow_dispatch: 
+      - '**'
+  workflow_dispatch:  # Permet de lancer manuellement
 
 env:
   NODE_VERSION: '22'
@@ -18,9 +18,6 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: new-app
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
