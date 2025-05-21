@@ -6,12 +6,34 @@ export default function Chat() {
   const [messages, setMessages] = useState<{ content: string; timestamp: string }[]>([]);
   const [input, setInput] = useState('');
 
+  // Charger les anciens messages au démarrage
+  useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        const response = await fetch('/api/getMessages');
+        if (response.ok) {
+          const data = await response.json();
+          setMessages(data);
+          console.log('Fetched messages:', data);
+        } else {
+          console.error('Failed to fetch messages:', await response.text());
+        }
+      } catch (error) {
+        console.error('Error fetching messages:', error);
+      }
+    };
+
+    fetchMessages();
+  }, []);
+
+  // Écouter les nouveaux messages via SSE
   useEffect(() => {
     const eventSource = new EventSource('/api/notifications');
 
     eventSource.onmessage = (event) => {
+      console.log('Raw SSE data:', event.data);
       const data = JSON.parse(event.data);
-      const content = data.content || 'No content';
+      const content = data.content && data.content !== 'No content' ? data.content : '[Empty Message]';
       const timestamp = data.timestamp || new Date().toISOString();
       console.log('Message received via SSE:', content, 'at', timestamp);
       setMessages((prev) => [...prev, { content, timestamp }]);

@@ -22,17 +22,14 @@ export async function GET() {
 
             try {
               const msgData = JSON.parse(rawMessage);
-              // Si msgData est un objet avec content et timestamp (nouveau format)
               if (msgData.content && msgData.timestamp) {
                 content = msgData.content;
                 timestamp = msgData.timestamp;
               } else {
-                // Si c'est une chaîne brute (ancien format)
                 content = rawMessage;
-                timestamp = new Date().toISOString(); // Ajouter un timestamp actuel pour les anciens messages
+                timestamp = new Date().toISOString();
               }
             } catch (error) {
-              // Si JSON.parse échoue, traiter comme une chaîne brute
               content = rawMessage;
               timestamp = new Date().toISOString();
             }
