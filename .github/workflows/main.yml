@@ -49,3 +49,7 @@ jobs:
       - name: Check Coverage Output
         run: |
           ls -la coverage/ && cat coverage/lcov.info || echo "Coverage report not generated"
+      - name: Run Linting
+        run: npm run lint || npm run lint -- --max-warnings=0
+      - name: Run TypeScript Check
+        run: npx tsc --noEmit
