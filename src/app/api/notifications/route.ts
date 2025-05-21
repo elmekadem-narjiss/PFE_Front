@@ -17,14 +17,31 @@ export async function GET() {
         await consumer.subscribe({ topic: 'team-messages', fromBeginning: true });
         await consumer.run({
           eachMessage: async ({ topic, partition, message }) => {
-            const msg = message.value?.toString() || '';
-            console.log(`Message received from Kafka (topic: ${topic}, partition: ${partition}): ${msg}`);
-            controller.enqueue(`data: ${JSON.stringify({ message: msg })}\n\n`);
+            const rawMessage = message.value?.toString() || '';
+            let content, timestamp;
+
+            try {
+              const msgData = JSON.parse(rawMessage);
+              // Si msgData est un objet avec content et timestamp (nouveau format)
+              if (msgData.content && msgData.timestamp) {
+                content = msgData.content;
+                timestamp = msgData.timestamp;
+              } else {
+                // Si c'est une chaîne brute (ancien format)
+                content = rawMessage;
+                timestamp = new Date().toISOString(); // Ajouter un timestamp actuel pour les anciens messages
+              }
+            } catch (error) {
+              // Si JSON.parse échoue, traiter comme une chaîne brute
+              content = rawMessage;
+              timestamp = new Date().toISOString();
+            }
+
+            console.log(`Message received from Kafka (topic: ${topic}, partition: ${partition}): ${content} at ${timestamp}`);
+            console.log('Sending via SSE:', { content, timestamp });
+            controller.enqueue(`data: ${JSON.stringify({ content, timestamp })}\n\n`);
           },
         });
-        // Supprimer temporairement l'appel à assignment() pour éviter l'erreur
-        // const assignments = await (consumer as any).assignment();
-        // console.log('Consumer assignments:', assignments);
       } catch (error) {
         console.error('Error consuming messages from Kafka:', error);
         controller.close();
