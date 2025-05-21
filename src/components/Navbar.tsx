@@ -45,6 +45,11 @@ export default function Navbar({ isOpen, onToggle }: NavbarProps) {
              ToDoList
             </a>
           </li>
+          <li className={styles.navItem}>
+            <a href="/chat" className={styles.navLink}>
+             Equip_Chat
+            </a>
+          </li>
         </ul>
       </nav>
     </>
