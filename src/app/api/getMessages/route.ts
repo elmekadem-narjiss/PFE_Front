@@ -1,45 +1,42 @@
-import { Kafka } from 'kafkajs';
-import { NextResponse } from 'next/server';
+import { Kafka } from "kafkajs";
+import { NextResponse } from "next/server";
 
+// Initialize Kafka client (shared across requests)
 const kafka = new Kafka({
-  clientId: 'message-fetcher',
-  brokers: ['localhost:9092'],
+  clientId: "message-fetcher",
+  brokers: ["localhost:9092"],
 });
 
-const consumer = kafka.consumer({ groupId: 'message-fetcher-group' });
-const admin = kafka.admin();
-
 export async function GET() {
+  const consumer = kafka.consumer({ groupId: "message-fetcher-group" });
+  const admin = kafka.admin();
+
   try {
-    const messages: { content: string; timestamp: string }[] = [];
-
-    // Connecter l'admin et le consommateur
-    await admin.connect();
+    // Connect consumer and admin
     await consumer.connect();
+    await admin.connect();
 
-    // Réinitialiser les offsets à "earliest" pour relire tous les messages
+    // Reset offsets to earliest
     await admin.resetOffsets({
-      groupId: 'message-fetcher-group',
-      topic: 'team-messages',
+      groupId: "message-fetcher-group",
+      topic: "team-messages",
       earliest: true,
     });
 
-    // S'abonner au topic
-    await consumer.subscribe({ topic: 'team-messages', fromBeginning: true });
+    // Subscribe to the topic before running the consumer
+    await consumer.subscribe({ topic: "team-messages", fromBeginning: true });
 
-    // Obtenir les offsets finaux pour détecter la fin
-    const topicOffsets = await admin.fetchTopicOffsets('team-messages');
+    // Fetch topic offsets to determine the end
+    const topicOffsets = await admin.fetchTopicOffsets("team-messages");
     const maxOffset = parseInt(topicOffsets[0].high, 10);
 
-    // Collecter les messages
-    await new Promise<void>((resolve) => {
-      let isRunning = true;
+    const messages: { content: string; timestamp: string }[] = [];
 
+    // Run the consumer to fetch messages
+    await new Promise<void>((resolve, reject) => {
       consumer.run({
         eachMessage: async ({ message }) => {
-          if (!isRunning) return;
-
-          const rawMessage = message.value?.toString() || '';
+          const rawMessage = message.value?.toString() || "";
           let content, timestamp;
 
           try {
@@ -58,24 +55,26 @@ export async function GET() {
 
           messages.push({ content, timestamp });
 
-          // Arrêter si on atteint la fin du topic
+          // Check if we've reached the end of the topic
           const currentOffset = parseInt(message.offset, 10);
           if (currentOffset >= maxOffset - 1) {
-            isRunning = false;
-            consumer.stop();
-            resolve();
+            resolve(); // Resolve the promise when done
           }
         },
-      });
+        autoCommit: false, // Disable auto-commit to control offset manually
+      }).catch(reject); // Handle errors from consumer.run
     });
 
+    // Disconnect consumer and admin
     await consumer.disconnect();
     await admin.disconnect();
+
     return NextResponse.json(messages);
   } catch (error) {
-    console.error('Error fetching messages from Kafka:', error);
-    await consumer.disconnect();
-    await admin.disconnect();
-    return NextResponse.json({ error: 'Failed to fetch messages' }, { status: 500 });
+    console.error("Error fetching messages from Kafka:", error);
+    // Ensure cleanup on error
+    await consumer.disconnect().catch(() => {});
+    await admin.disconnect().catch(() => {});
+    return NextResponse.json({ error: "Failed to fetch messages" }, { status: 500 });
   }
 }

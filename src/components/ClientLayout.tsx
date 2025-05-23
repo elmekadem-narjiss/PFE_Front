@@ -1,31 +1,23 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import Navbar from './Navbar';
+import { KeycloakProvider } from "@/context/KeycloakContext";
+import { BatteryProvider } from "@/context/BatteryContext";
+import Navbar from "@/components/Navbar";
+import { useState } from "react";
 
-export default function ClientLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
 
-  const toggleMenu = () => {
+  const toggleNavbar = () => {
     setIsOpen(!isOpen);
   };
 
-  useEffect(() => {
-    if (isOpen) {
-      document.body.classList.add('sidebar-open');
-    } else {
-      document.body.classList.remove('sidebar-open');
-    }
-  }, [isOpen]);
-
   return (
-    <>
-      <Navbar onToggle={toggleMenu} isOpen={isOpen} />
-      <main>{children}</main>
-    </>
+    <KeycloakProvider>
+      <BatteryProvider>
+        <Navbar isOpen={isOpen} onToggle={toggleNavbar} />
+        {children}
+      </BatteryProvider>
+    </KeycloakProvider>
   );
 }
