@@ -10,7 +10,7 @@ interface NavbarProps {
 }
 
 export default function Navbar({ isOpen, onToggle }: NavbarProps) {
-  const { keycloak, initialized, initError } = useKeycloak();
+  const { keycloak, initialized, initError, isAuthenticated } = useKeycloak();
 
   useEffect(() => {
     console.log("Navbar - Initial State:", {
@@ -54,7 +54,6 @@ export default function Navbar({ isOpen, onToggle }: NavbarProps) {
       console.log("Navbar - Logout completed, authState removed from localStorage");
     } else {
       console.error("Navbar - Error: Keycloak logout method not available");
-      // Fallback: Clear state and redirect manually
       localStorage.removeItem("authState");
       window.location.href = "http://localhost:3000/login";
     }
@@ -69,54 +68,59 @@ export default function Navbar({ isOpen, onToggle }: NavbarProps) {
       </button>
       <nav className={`${styles.navbar} ${isOpen ? styles.open : ""}`}>
         <ul className={styles.navList}>
-          <li className={styles.navItem}>
-            <br />
-            <br />
-            <br />
-            <br />
-            <a href="/batteries" className={styles.navLink}>
-              <b>Batteries</b>
-            </a>
-          </li>
-          <li className={styles.navItem}>
-            <a href="/dashboard" className={styles.navLink}>
-              <b>Predict-Service</b>
-            </a>
-          </li>
-          <li className={styles.navItem}>
-            <a href="/reports" className={styles.navLink}>
-              <b>Reports</b>
-            </a>
-          </li>
-          <li className={styles.navItem}>
-            <a href="/settings" className={styles.navLink}>
-              <b>Settings</b>
-            </a>
-          </li>
-          <li className={styles.navItem}>
-            <a href="/dashboard/monitoring" className={styles.navLink}>
-              <b>Monitoring</b>
-            </a>
-          </li>
-          <li className={styles.navItem}>
-            <a href="/todolist" className={styles.navLink}>
-              <b>ToDoList</b>
-            </a>
-          </li>
-          <li className={styles.navItem}>
-            <a href="/chat" className={styles.navLink}>
-              <b>Equip_Chat</b>
-            </a>
-          </li>
-          {keycloak.authenticated && (
+          {!isAuthenticated() && (
             <li className={styles.navItem}>
-              <button
-                onClick={handleLogout}
-                className={`${styles.navLink} ${styles.logoutButton}`}
-              >
-                Logout
-              </button>
+              <span className={styles.navLink} style={{ color: "gray", cursor: "not-allowed" }}>
+                <b>Please log in to access the app</b>
+              </span>
             </li>
+          )}
+          {isAuthenticated() && (
+            <>
+              <li className={styles.navItem}>
+                <a href="/batteries" className={styles.navLink}>
+                  <b>Batteries</b>
+                </a>
+              </li>
+              <li className={styles.navItem}>
+                <a href="/dashboard" className={styles.navLink}>
+                  <b>Predict-Service</b>
+                </a>
+              </li>
+              <li className={styles.navItem}>
+                <a href="/reports" className={styles.navLink}>
+                  <b>Reports</b>
+                </a>
+              </li>
+              <li className={styles.navItem}>
+                <a href="/settings" className={styles.navLink}>
+                  <b>Settings</b>
+                </a>
+              </li>
+              <li className={styles.navItem}>
+                <a href="/dashboard/monitoring" className={styles.navLink}>
+                  <b>Monitoring</b>
+                </a>
+              </li>
+              <li className={styles.navItem}>
+                <a href="/todolist" className={styles.navLink}>
+                  <b>ToDoList</b>
+                </a>
+              </li>
+              <li className={styles.navItem}>
+                <a href="/chat" className={styles.navLink}>
+                  <b>Equip_Chat</b>
+                </a>
+              </li>
+              <li className={styles.navItem}>
+                <button
+                  onClick={handleLogout}
+                  className={`${styles.navLink} ${styles.logoutButton}`}
+                >
+                  Logout
+                </button>
+              </li>
+            </>
           )}
         </ul>
       </nav>

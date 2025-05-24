@@ -3,6 +3,7 @@
 import Keycloak from "keycloak-js";
 import { createContext, useContext, useState, useEffect, useRef, ReactNode } from "react";
 
+// Normalize the URL to ensure a trailing slash
 const baseUrl = process.env.NEXT_PUBLIC_KEYCLOAK_URL || "http://localhost:8080";
 const authServerUrl = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
 
@@ -17,6 +18,7 @@ interface KeycloakContextType {
   initialized: boolean;
   initError: Error | null;
   updateAuthState: (authenticated: boolean, token?: string, refreshToken?: string) => void;
+  isAuthenticated: () => boolean;
 }
 
 export const KeycloakContext = createContext<KeycloakContextType | undefined>(undefined);
@@ -41,33 +43,42 @@ export const KeycloakProvider = ({ children }: { children: ReactNode }) => {
         const storedAuth = localStorage.getItem("authState");
         let authenticated = false;
 
-        // Always initialize Keycloak to validate the session
-        authenticated = await keycloak.init({ onLoad: "check-sso", checkLoginIframe: false });
+        authenticated = await keycloak.init({ onLoad: "check-sso", checkLoginIframe: false }).catch((err) => {
+          console.error("Keycloak init failed:", err);
+          return false;
+        });
 
         if (storedAuth) {
-          const { token, refreshToken } = JSON.parse(storedAuth);
-          keycloak.token = token;
-          keycloak.refreshToken = refreshToken;
+          const parsedAuth = JSON.parse(storedAuth);
+          const { token, refreshToken } = parsedAuth;
 
-          // Validate the token by checking with Keycloak
-          try {
-            const isActive = await keycloak.updateToken(0); // Force token refresh check
-            authenticated = isActive;
-            console.log("Token validation result:", isActive);
-          } catch (error) {
-            console.error("Token validation failed:", error);
+          // Validate that token and refreshToken exist before proceeding
+          if (token && refreshToken) {
+            keycloak.token = token;
+            keycloak.refreshToken = refreshToken;
+            try {
+              const isActive = await keycloak.updateToken(0); // Validate token
+              authenticated = isActive;
+              console.log("Token validation result:", isActive);
+            } catch (error) {
+              console.error("Token validation failed:", error || "Unknown error");
+              authenticated = false;
+              localStorage.removeItem("authState"); // Clear invalid state
+            }
+          } else {
+            console.error("Invalid stored auth state, missing token or refreshToken:", parsedAuth);
             authenticated = false;
             localStorage.removeItem("authState"); // Clear invalid state
           }
         }
 
-        keycloak.authenticated = authenticated;
-        authStateRef.current = { authenticated, token: keycloak.token || "", refreshToken: keycloak.refreshToken || "" };
+        keycloak.authenticated = authenticated ?? false;
+        authStateRef.current = { authenticated: keycloak.authenticated, token: keycloak.token || "", refreshToken: keycloak.refreshToken || "" };
         localStorage.setItem("authState", JSON.stringify(authStateRef.current));
         setInitialized(true);
-        console.log("Keycloak initialized, authenticated:", authenticated);
+        console.log("Keycloak initialized, authenticated:", keycloak.authenticated);
       } catch (error) {
-        console.error("Keycloak initialization failed:", error);
+        console.error("Keycloak initialization failed:", error || "Unknown error");
         setInitError(error instanceof Error ? error : new Error("Unknown initialization error"));
         setInitialized(true);
       }
@@ -82,6 +93,8 @@ export const KeycloakProvider = ({ children }: { children: ReactNode }) => {
     keycloak.refreshToken = refreshToken || "";
     authStateRef.current = { authenticated, token: keycloak.token, refreshToken: keycloak.refreshToken };
     localStorage.setItem("authState", JSON.stringify(authStateRef.current));
+    // Set a cookie for middleware to check
+    document.cookie = `auth=${authenticated}; path=/`;
     console.log("Auth state updated, authenticated:", authenticated);
   };
 
@@ -92,6 +105,13 @@ export const KeycloakProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const isAuthenticated = (): boolean => {
+    if (!initialized || !keycloak) {
+      return false;
+    }
+    return keycloak.authenticated !== undefined ? keycloak.authenticated : false;
+  };
+
   useEffect(() => {
     if (initialized) {
       ensureKeycloakMethods();
@@ -99,7 +119,7 @@ export const KeycloakProvider = ({ children }: { children: ReactNode }) => {
   }, [initialized]);
 
   return (
-    <KeycloakContext.Provider value={{ keycloak, initialized, initError, updateAuthState }}>
+    <KeycloakContext.Provider value={{ keycloak, initialized, initError, updateAuthState, isAuthenticated }}>
       {children}
     </KeycloakContext.Provider>
   );

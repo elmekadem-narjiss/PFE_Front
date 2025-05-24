@@ -10,7 +10,7 @@ export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [hasLoggedIn, setHasLoggedIn] = useState(false); // Track if the user has actively logged in
+  const [hasLoggedIn, setHasLoggedIn] = useState(false);
 
   useEffect(() => {
     if (!initialized) return;
@@ -21,7 +21,7 @@ export default function LoginPage() {
     }
 
     if (keycloak.authenticated && hasLoggedIn) {
-      console.log("User is authenticated and has logged in, redirecting to /dashboard");
+      console.log("User is authenticated and has logged in, redirecting to /dashboard (via useEffect)");
       router.push("/dashboard");
     }
   }, [initialized, initError, keycloak.authenticated, router, hasLoggedIn]);
@@ -60,9 +60,18 @@ export default function LoginPage() {
       const refreshToken = data.refresh_token;
 
       if (token) {
-        updateAuthState(true, token, refreshToken); // Sync the state
-        setHasLoggedIn(true); // Set flag after successful login
-        router.push("/dashboard");
+        updateAuthState(true, token, refreshToken);
+        setHasLoggedIn(true);
+        console.log("Login successful, attempting to redirect to /dashboard");
+        try {
+          await router.push("/dashboard");
+          console.log("Router push to /dashboard completed");
+        } catch (err) {
+          console.error("Router push failed:", err);
+          // Fallback redirect
+          console.log("Falling back to window.location.href for redirect");
+          window.location.href = "/dashboard";
+        }
       } else {
         setError("Authentication failed: No token received");
       }
