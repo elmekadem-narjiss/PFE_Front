@@ -1,6 +1,8 @@
 "use client";
-import styles from './navbar.module.css';
-import { useAuth } from '../hooks/useAuth';
+
+import { useEffect } from "react";
+import styles from "./navbar.module.css";
+import { useKeycloak } from "@/context/KeycloakContext";
 
 interface NavbarProps {
   isOpen: boolean;
@@ -8,28 +10,77 @@ interface NavbarProps {
 }
 
 export default function Navbar({ isOpen, onToggle }: NavbarProps) {
-  const { authenticated, logout } = useAuth();
+  const { keycloak, initialized, initError } = useKeycloak();
+
+  useEffect(() => {
+    console.log("Navbar - Initial State:", {
+      initialized,
+      authenticated: keycloak?.authenticated,
+      initError: initError?.message,
+      keycloakInstance: keycloak ? "Available" : "Not Available",
+    });
+
+    if (initialized && keycloak) {
+      console.log("Navbar - Keycloak Details:", {
+        authenticated: keycloak.authenticated,
+        token: keycloak.token ? "Present" : "Absent",
+        refreshToken: keycloak.refreshToken ? "Present" : "Absent",
+        hasLogoutMethod: typeof keycloak.logout === "function" ? "Yes" : "No",
+      });
+    }
+  }, [initialized, keycloak, initError]);
+
+  useEffect(() => {
+    if (initialized) {
+      console.log("Navbar - Authenticated State Changed:", keycloak?.authenticated);
+    }
+  }, [initialized, keycloak?.authenticated]);
+
+  if (!initialized) {
+    console.log("Navbar - Rendering Loading State due to !initialized");
+    return <div>Loading...</div>;
+  }
+
+  if (initError) {
+    console.log("Navbar - Rendering Error State:", initError.message);
+    return <div>Error initializing Keycloak: {initError.message}</div>;
+  }
 
   const handleLogout = () => {
-    logout();
+    console.log("Navbar - Initiating Logout");
+    if (keycloak && typeof keycloak.logout === "function") {
+      keycloak.logout({ redirectUri: "http://localhost:3000/login" });
+      localStorage.removeItem("authState");
+      console.log("Navbar - Logout completed, authState removed from localStorage");
+    } else {
+      console.error("Navbar - Error: Keycloak logout method not available");
+      // Fallback: Clear state and redirect manually
+      localStorage.removeItem("authState");
+      window.location.href = "http://localhost:3000/login";
+    }
   };
+
+  console.log("Navbar - Rendering with authenticated:", keycloak.authenticated);
 
   return (
     <>
       <button className={styles.toggleButton} onClick={onToggle}>
-        {isOpen ? '✖' : '☰'}
+        {isOpen ? "✖" : "☰"}
       </button>
-      <nav className={`${styles.navbar} ${isOpen ? styles.open : ''}`}>
+      <nav className={`${styles.navbar} ${isOpen ? styles.open : ""}`}>
         <ul className={styles.navList}>
           <li className={styles.navItem}>
-            <br /><br /><br /><br />
+            <br />
+            <br />
+            <br />
+            <br />
             <a href="/batteries" className={styles.navLink}>
-            <b> Batteries</b>  
+              <b>Batteries</b>
             </a>
           </li>
           <li className={styles.navItem}>
             <a href="/dashboard" className={styles.navLink}>
-              <b> Predict-Service</b> 
+              <b>Predict-Service</b>
             </a>
           </li>
           <li className={styles.navItem}>
@@ -49,7 +100,7 @@ export default function Navbar({ isOpen, onToggle }: NavbarProps) {
           </li>
           <li className={styles.navItem}>
             <a href="/todolist" className={styles.navLink}>
-              <b> ToDoList </b>
+              <b>ToDoList</b>
             </a>
           </li>
           <li className={styles.navItem}>
@@ -57,9 +108,12 @@ export default function Navbar({ isOpen, onToggle }: NavbarProps) {
               <b>Equip_Chat</b>
             </a>
           </li>
-          {authenticated && (
+          {keycloak.authenticated && (
             <li className={styles.navItem}>
-              <button onClick={handleLogout} className={`${styles.navLink} ${styles.logoutButton}`}>
+              <button
+                onClick={handleLogout}
+                className={`${styles.navLink} ${styles.logoutButton}`}
+              >
                 Logout
               </button>
             </li>

@@ -1,86 +1,106 @@
 "use client";
 
-import { createContext, useState, useEffect, ReactNode } from "react";
 import Keycloak from "keycloak-js";
-import { useRouter } from "next/navigation";
+import { createContext, useContext, useState, useEffect, useRef, ReactNode } from "react";
 
-// Create Keycloak instance
-const keycloak = new Keycloak({
-  url: process.env.NEXT_PUBLIC_KEYCLOAK_URL || "http://localhost:8080",
+const baseUrl = process.env.NEXT_PUBLIC_KEYCLOAK_URL || "http://localhost:8080";
+const authServerUrl = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
+
+const initialKeycloak = new Keycloak({
+  url: authServerUrl,
   realm: process.env.NEXT_PUBLIC_KEYCLOAK_REALM || "myrealm",
   clientId: process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || "my-nodejs-client",
 });
 
 interface KeycloakContextType {
-  authenticated: boolean;
-  login: () => void;
-  logout: () => void;
-  userInfo: any;
-  error: string | null;
+  keycloak: Keycloak;
+  initialized: boolean;
+  initError: Error | null;
+  updateAuthState: (authenticated: boolean, token?: string, refreshToken?: string) => void;
 }
 
-export const KeycloakContext = createContext<KeycloakContextType>({
-  authenticated: false,
-  login: () => {},
-  logout: () => {},
-  userInfo: null,
-  error: null,
-});
+export const KeycloakContext = createContext<KeycloakContextType | undefined>(undefined);
 
-export function KeycloakProvider({ children }: { children: ReactNode }) {
-  const [authenticated, setAuthenticated] = useState(false);
-  const [userInfo, setUserInfo] = useState<any>(null);
-  const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
+export const useKeycloak = () => {
+  const context = useContext(KeycloakContext);
+  if (!context) {
+    throw new Error("useKeycloak must be used within a KeycloakProvider");
+  }
+  return context;
+};
+
+export const KeycloakProvider = ({ children }: { children: ReactNode }) => {
+  const [keycloak] = useState<Keycloak>(initialKeycloak);
+  const [initialized, setInitialized] = useState(false);
+  const [initError, setInitError] = useState<Error | null>(null);
+  const authStateRef = useRef({ authenticated: false, token: "", refreshToken: "" });
 
   useEffect(() => {
-    // Initialize Keycloak only once
-    keycloak
-      .init({ onLoad: "check-sso", checkLoginIframe: false })
-      .then((auth) => {
-        setAuthenticated(auth);
-        if (auth && keycloak.token) {
-          localStorage.setItem("token", keycloak.token);
-          fetchUserInfo();
-        }
-      })
-      .catch((err) => {
-        console.error("Keycloak initialization error:", err);
-        setError("Failed to initialize Keycloak");
-      });
-
-    // Fetch user info when authenticated
-    const fetchUserInfo = async () => {
+    const initializeKeycloak = async () => {
       try {
-        const response = await fetch("/api/user-info", {
-          headers: {
-            Authorization: `Bearer ${keycloak.token}`,
-          },
-        });
-        if (!response.ok) {
-          throw new Error(`Failed to fetch user info: ${response.status}`);
+        const storedAuth = localStorage.getItem("authState");
+        let authenticated = false;
+
+        // Always initialize Keycloak to validate the session
+        authenticated = await keycloak.init({ onLoad: "check-sso", checkLoginIframe: false });
+
+        if (storedAuth) {
+          const { token, refreshToken } = JSON.parse(storedAuth);
+          keycloak.token = token;
+          keycloak.refreshToken = refreshToken;
+
+          // Validate the token by checking with Keycloak
+          try {
+            const isActive = await keycloak.updateToken(0); // Force token refresh check
+            authenticated = isActive;
+            console.log("Token validation result:", isActive);
+          } catch (error) {
+            console.error("Token validation failed:", error);
+            authenticated = false;
+            localStorage.removeItem("authState"); // Clear invalid state
+          }
         }
-        const data = await response.json();
-        setUserInfo(data);
-      } catch (err: any) {
-        setError(err.message || "Failed to fetch user info");
-        console.error(err);
+
+        keycloak.authenticated = authenticated;
+        authStateRef.current = { authenticated, token: keycloak.token || "", refreshToken: keycloak.refreshToken || "" };
+        localStorage.setItem("authState", JSON.stringify(authStateRef.current));
+        setInitialized(true);
+        console.log("Keycloak initialized, authenticated:", authenticated);
+      } catch (error) {
+        console.error("Keycloak initialization failed:", error);
+        setInitError(error instanceof Error ? error : new Error("Unknown initialization error"));
+        setInitialized(true);
       }
     };
-  }, []);
 
-  const login = () => keycloak.login({ redirectUri: window.location.origin + "/login" });
-  const logout = () => {
-    keycloak.logout({ redirectUri: window.location.origin + "/login" });
-    localStorage.removeItem("token");
-    setAuthenticated(false);
-    setUserInfo(null);
-    setError(null);
+    initializeKeycloak();
+  }, [keycloak]);
+
+  const updateAuthState = (authenticated: boolean, token?: string, refreshToken?: string) => {
+    keycloak.authenticated = authenticated;
+    keycloak.token = token || "";
+    keycloak.refreshToken = refreshToken || "";
+    authStateRef.current = { authenticated, token: keycloak.token, refreshToken: keycloak.refreshToken };
+    localStorage.setItem("authState", JSON.stringify(authStateRef.current));
+    console.log("Auth state updated, authenticated:", authenticated);
   };
 
+  const ensureKeycloakMethods = () => {
+    if (!keycloak.login || !keycloak.logout) {
+      console.error("Keycloak methods missing, reinitializing...");
+      Object.setPrototypeOf(keycloak, Keycloak.prototype);
+    }
+  };
+
+  useEffect(() => {
+    if (initialized) {
+      ensureKeycloakMethods();
+    }
+  }, [initialized]);
+
   return (
-    <KeycloakContext.Provider value={{ authenticated, login, logout, userInfo, error }}>
+    <KeycloakContext.Provider value={{ keycloak, initialized, initError, updateAuthState }}>
       {children}
     </KeycloakContext.Provider>
   );
-}
+};

@@ -1,7 +1,6 @@
 import { Kafka } from "kafkajs";
 import { NextResponse } from "next/server";
 
-// Initialize Kafka client (shared across requests)
 const kafka = new Kafka({
   clientId: "message-fetcher",
   brokers: ["localhost:9092"],
@@ -12,69 +11,83 @@ export async function GET() {
   const admin = kafka.admin();
 
   try {
-    // Connect consumer and admin
-    await consumer.connect();
     await admin.connect();
 
-    // Reset offsets to earliest
-    await admin.resetOffsets({
-      groupId: "message-fetcher-group",
-      topic: "team-messages",
-      earliest: true,
-    });
+    // Validate topic existence
+    const topicMetadata = await admin.fetchTopicMetadata({ topics: ["team-messages"] });
+    if (!topicMetadata.topics.some((t) => t.name === "team-messages")) {
+      throw new Error("Topic 'team-messages' does not exist");
+    }
 
-    // Subscribe to the topic before running the consumer
+    // Check consumer group state and pause if necessary (avoid deletion)
+    const groupDescription = await admin.describeGroups(["message-fetcher-group"]);
+    const group = groupDescription.groups.find((g) => g.groupId === "message-fetcher-group");
+
+    if (group && group.state === "Stable") {
+      console.log("Consumer group is active, waiting to stabilize...");
+      // Wait to avoid race condition with other consumers
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Optionally reset offsets only if critical (avoid if possible)
+      await admin.resetOffsets({
+        groupId: "message-fetcher-group",
+        topic: "team-messages",
+        earliest: true,
+      });
+    }
+
+    await consumer.connect();
     await consumer.subscribe({ topic: "team-messages", fromBeginning: true });
 
-    // Fetch topic offsets to determine the end
-    const topicOffsets = await admin.fetchTopicOffsets("team-messages");
-    const maxOffset = parseInt(topicOffsets[0].high, 10);
-
     const messages: { content: string; timestamp: string }[] = [];
+    let isDone = false;
 
-    // Run the consumer to fetch messages
     await new Promise<void>((resolve, reject) => {
-      consumer.run({
-        eachMessage: async ({ message }) => {
-          const rawMessage = message.value?.toString() || "";
-          let content, timestamp;
+      const timeout = setTimeout(() => {
+        isDone = true;
+        resolve();
+      }, 5000);
 
-          try {
-            const msgData = JSON.parse(rawMessage);
-            if (msgData.content && msgData.timestamp) {
-              content = msgData.content;
-              timestamp = msgData.timestamp;
-            } else {
+      consumer
+        .run({
+          eachMessage: async ({ message }) => {
+            if (isDone) return;
+
+            const rawMessage = message.value?.toString() || "";
+            let content, timestamp;
+
+            try {
+              const msgData = JSON.parse(rawMessage);
+              content = msgData.content || rawMessage;
+              timestamp = msgData.timestamp || new Date().toISOString();
+            } catch (error) {
               content = rawMessage;
               timestamp = new Date().toISOString();
             }
-          } catch (error) {
-            content = rawMessage;
-            timestamp = new Date().toISOString();
-          }
 
-          messages.push({ content, timestamp });
+            messages.push({ content, timestamp });
 
-          // Check if we've reached the end of the topic
-          const currentOffset = parseInt(message.offset, 10);
-          if (currentOffset >= maxOffset - 1) {
-            resolve(); // Resolve the promise when done
-          }
-        },
-        autoCommit: false, // Disable auto-commit to control offset manually
-      }).catch(reject); // Handle errors from consumer.run
+            if (messages.length >= 100) {
+              isDone = true;
+              resolve();
+            }
+          },
+          autoCommit: false,
+        })
+        .catch(reject);
+
+      return () => clearTimeout(timeout);
     });
 
-    // Disconnect consumer and admin
     await consumer.disconnect();
     await admin.disconnect();
 
     return NextResponse.json(messages);
   } catch (error) {
     console.error("Error fetching messages from Kafka:", error);
-    // Ensure cleanup on error
-    await consumer.disconnect().catch(() => {});
-    await admin.disconnect().catch(() => {});
-    return NextResponse.json({ error: "Failed to fetch messages" }, { status: 500 });
+    console.error("Full error details:", JSON.stringify(error, Object.getOwnPropertyNames(error)));
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+    await consumer.disconnect().catch((err) => console.warn("Error disconnecting consumer:", err));
+    await admin.disconnect().catch((err) => console.warn("Error disconnecting admin:", err));
+    return NextResponse.json({ error: `Failed to fetch messages: ${errorMessage}` }, { status: 500 });
   }
 }
