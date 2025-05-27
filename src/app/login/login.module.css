@@ -1,0 +1,116 @@
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #1a1f2e; /* Dark background similar to the image */
+  padding: 20px;
+}
+
+.formSection {
+  background: transparent; /* No background for transparency effect */
+  padding: 40px; /* Increased padding for more space */
+  border-radius: 10px;
+  width: 400px;
+  animation: slideIn 0.8s ease-out;
+}
+
+.title {
+  font-size: 24px;
+  color: #fff; /* White text */
+  margin-bottom: 40px; /* Increased spacing below title */
+  text-align: center;
+  animation: fadeIn 1s ease-in;
+}
+
+.formGroup {
+  margin-bottom: 30px; /* Increased spacing between form groups */
+}
+
+.label {
+  display: block;
+  font-size: 14px;
+  color: #ccc; /* Light gray for labels */
+  margin-bottom: 10px; /* Spacing between label and input */
+  text-transform: uppercase;
+}
+
+.input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #4a4f60; /* Darker gray border */
+  border-radius: 5px;
+  background-color: #3a3f50; /* Gray background for inputs */
+  color: #fff;
+  font-size: 16px;
+  transition: border-color 0.3s ease;
+}
+
+.input:focus {
+  border-color: #00c4b4; /* Teal focus effect */
+  outline: none;
+  box-shadow: 0 0 5px rgba(0, 196, 180, 0.5);
+}
+
+.input::placeholder {
+  color: #aaa;
+}
+
+.button {
+  width: 100%;
+  padding: 14px;
+  background-color: #00c4b4; /* Teal button */
+  border: none;
+  border-radius: 5px;
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+  transition: transform 0.3s, background-color 0.3s;
+}
+
+.button:hover {
+  transform: scale(1.05);
+  background-color: #00b0a3; /* Slightly darker teal on hover */
+}
+
+/* Animations */
+@keyframes slideIn {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .container {
+    min-height: auto;
+    padding: 10px;
+  }
+
+  .formSection {
+    width: 100%;
+    padding: 20px;
+  }
+
+  .title {
+    margin-bottom: 20px;
+  }
+
+  .formGroup {
+    margin-bottom: 20px;
+  }
+}

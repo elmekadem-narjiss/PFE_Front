@@ -3,6 +3,7 @@
 import { useKeycloak } from "@/context/KeycloakContext";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import styles from "./login.module.css"; // Import the CSS module
 
 export default function LoginPage() {
   const { keycloak, initialized, initError, updateAuthState } = useKeycloak();
@@ -91,35 +92,32 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={{ maxWidth: "400px", margin: "50px auto", padding: "20px", background: "#fff", borderRadius: "5px" }}>
-      <h2>Sign in to your account</h2>
-      {error && <p style={{ color: "red" }}>{error}</p>}
+    <div className={styles.container}>
+      <h2 className={styles.title}>Sign in to your account</h2>
+      {error && <p className={styles.error}>{error}</p>}
       <form onSubmit={handleLogin}>
-        <div style={{ marginBottom: "15px" }}>
-          <label>Username or email</label>
+        <div className={styles.formGroup}>
+          <label className={styles.label}>Username or email</label>
           <input
             type="text"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            style={{ width: "100%", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
+            className={styles.input}
             placeholder="testuser"
             required
           />
         </div>
-        <div style={{ marginBottom: "15px" }}>
-          <label>Password</label>
+        <div className={styles.formGroup}>
+          <label className={styles.label}>Password</label>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            style={{ width: "100%", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
+            className={styles.input}
             required
           />
         </div>
-        <button
-          type="submit"
-          style={{ width: "100%", padding: "10px", backgroundColor: "#0070f3", color: "#fff", border: "none", borderRadius: "4px", cursor: "pointer" }}
-        >
+        <button type="submit" className={styles.button}>
           Sign In
         </button>
       </form>

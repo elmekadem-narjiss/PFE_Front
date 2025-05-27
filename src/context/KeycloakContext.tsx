@@ -10,7 +10,7 @@ const authServerUrl = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
 const initialKeycloak = new Keycloak({
   url: authServerUrl,
   realm: process.env.NEXT_PUBLIC_KEYCLOAK_REALM || "myrealm",
-  clientId: process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || "my-nodejs-client",
+  clientId: process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID ||"my-nodejs-client",
 });
 
 interface KeycloakContextType {
