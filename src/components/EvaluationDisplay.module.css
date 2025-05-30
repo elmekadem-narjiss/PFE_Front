@@ -1,0 +1,50 @@
+.container {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  .metrics {
+    margin-bottom: 20px;
+  }
+  
+  .metrics ul {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .metrics li {
+    margin: 5px 0;
+    font-size: 16px;
+  }
+  
+  .results {
+    margin-bottom: 20px;
+  }
+  
+  .table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  
+  .table th,
+  .table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+  }
+  
+  .table th {
+    background-color: #f4f4f4;
+  }
+  
+  .graph {
+    text-align: center;
+  }
+  
+  .graphImage {
+    max-width: 100%;
+    height: auto;
+    border: 1px solid #ddd;
+  }
