@@ -26,11 +26,14 @@ export interface EvaluationResponse {
 export const fetchEvaluation = async (): Promise<EvaluationResponse> => {
   try {
     const response = await axios.get<EvaluationResponse>(`${API_BASE_URL}/evaluate`, {
-      timeout: 30000, // 30s timeout
+      timeout: 30000,
     });
     return response.data;
   } catch (error) {
     console.error('Error fetching evaluation:', error);
-    throw new Error('Failed to fetch evaluation data');
+    if (axios.isAxiosError(error)) {
+      throw new Error(error.response?.data?.error || 'Failed to fetch evaluation data');
+    }
+    throw new Error('Unexpected error occurred');
   }
 };
