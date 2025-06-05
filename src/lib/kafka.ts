@@ -1,36 +1,40 @@
-import { Kafka } from 'kafkajs';
+// lib/kafka.ts
+import { Kafka, Consumer, Producer } from 'kafkajs';
 
-const kafka = new Kafka({
-  clientId: 'chat-app',
+export const kafka = new Kafka({
+  clientId: 'message-fetcher',
   brokers: ['localhost:9092'],
+  logLevel: 4, // Enable DEBUG logging
 });
 
-export const producer = kafka.producer();
-export const consumer = kafka.consumer({ groupId: 'chat-group' });
+const consumerInstances: Map<string, Consumer> = new Map();
+let producerInstance: Producer | null = null;
 
-let isProducerConnected = false;
-let isConsumerConnected = false;
-
-export const connectKafka = async () => {
-  try {
-    if (!isProducerConnected) {
-      await producer.connect();
-      isProducerConnected = true;
-      console.log('Producer connected');
-    }
-    if (!isConsumerConnected) {
-      await consumer.connect();
-      isConsumerConnected = true;
-      console.log('Consumer connected');
-    }
-  } catch (error) {
-    console.error('Failed to connect to Kafka:', error);
-    throw error;
+export const getConsumer = async (groupId: string): Promise<Consumer> => {
+  let consumer = consumerInstances.get(groupId);
+  if (!consumer) {
+    consumer = kafka.consumer({ groupId });
+    await consumer.connect();
+    consumerInstances.set(groupId, consumer);
   }
+  return consumer;
 };
 
-export const ensureProducerConnected = async () => {
-  if (!isProducerConnected) {
-    await connectKafka();
+export const getProducer = async (): Promise<Producer> => {
+  if (!producerInstance) {
+    producerInstance = kafka.producer();
+    await producerInstance.connect();
+  }
+  return producerInstance;
+};
+
+export const disconnectKafka = async () => {
+  for (const consumer of consumerInstances.values()) {
+    await consumer.disconnect();
+  }
+  consumerInstances.clear();
+  if (producerInstance) {
+    await producerInstance.disconnect();
+    producerInstance = null;
   }
 };

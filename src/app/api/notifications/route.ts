@@ -1,53 +1,57 @@
-import { consumer } from '@/lib/kafka';
-import { NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import { startConsumer } from '../../../lib/kafka-consumer';
+import { subscribeToMessages } from '../../../lib/message-broadcaster';
 
-export const dynamic = 'force-dynamic';
+interface MessageData {
+  topic: string;
+  partition: number;
+  offset: string;
+  value: string;
+}
 
-export async function GET() {
-  const headers = {
-    'Content-Type': 'text/event-stream',
-    'Cache-Control': 'no-cache',
-    'Connection': 'keep-alive',
-  };
-
+export async function GET(request: NextRequest) {
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        console.log('Starting consumer for notifications');
-        await consumer.subscribe({ topic: 'team-messages', fromBeginning: true });
-        await consumer.run({
-          eachMessage: async ({ topic, partition, message }) => {
-            const rawMessage = message.value?.toString() || '';
-            let content, timestamp;
+        // Start consumer (runs once globally)
+        await startConsumer();
 
-            try {
-              const msgData = JSON.parse(rawMessage);
-              if (msgData.content && msgData.timestamp) {
-                content = msgData.content;
-                timestamp = msgData.timestamp;
-              } else {
-                content = rawMessage;
-                timestamp = new Date().toISOString();
-              }
-            } catch (error) {
-              content = rawMessage;
-              timestamp = new Date().toISOString();
-            }
+        // Subscribe to broadcasted messages
+        const unsubscribe = subscribeToMessages((data: MessageData) => {
+          try {
+            controller.enqueue(`data: ${JSON.stringify(data)}\n\n`);
+          } catch (error) {
+            console.warn('Controller closed, skipping enqueue:', error);
+          }
+        });
 
-            console.log(`Message received from Kafka (topic: ${topic}, partition: ${partition}): ${content} at ${timestamp}`);
-            console.log('Sending via SSE:', { content, timestamp });
-            controller.enqueue(`data: ${JSON.stringify({ content, timestamp })}\n\n`);
-          },
+        // Keep the stream alive
+        const keepAlive = setInterval(() => {
+          try {
+            controller.enqueue(`data: {"type":"keep-alive"}\n\n`);
+          } catch (error) {
+            console.warn('Controller closed, stopping keep-alive:', error);
+            clearInterval(keepAlive);
+          }
+        }, 15000);
+
+        // Handle stream cancellation
+        request.signal.addEventListener('abort', () => {
+          clearInterval(keepAlive);
+          unsubscribe();
         });
       } catch (error) {
-        console.error('Error consuming messages from Kafka:', error);
-        controller.close();
+        console.error('Error in SSE stream:', error);
+        controller.error(error);
       }
-    },
-    cancel() {
-      consumer.disconnect();
     },
   });
 
-  return new Response(stream, { headers });
+  return new Response(stream, {
+    headers: {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+    },
+  });
 }

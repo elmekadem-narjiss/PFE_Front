@@ -55,6 +55,11 @@ export default function Navbar({ isOpen, onToggle }: NavbarProps) {
               <b>Decision</b>
             </a>
           </li>
+          <li className={styles.navItem}>
+            <a href="/fournisseur" className={styles.navLink}>
+              <b>Manage_Energie</b>
+            </a>
+          </li>
 
         </ul>
       </nav>
