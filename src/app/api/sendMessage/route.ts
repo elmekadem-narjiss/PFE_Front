@@ -1,6 +1,6 @@
-// app/api/sendMessage/route.ts
+import { producer } from '@/lib/kafka';
 import { NextResponse } from 'next/server';
-import { getProducer } from '@/lib/kafka';
+import { ensureProducerConnected } from '@/lib/kafka';
 
 export async function POST(request: Request) {
   try {
@@ -9,7 +9,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 });
     }
 
-    const producer = await getProducer();
+    await ensureProducerConnected();
+
+    // Ajouter un timestamp au message
     const timestamp = new Date().toISOString();
     const messageWithTimestamp = { content: message, timestamp };
 
