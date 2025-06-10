@@ -1,31 +1,107 @@
+/* Reset default styles to remove black background */
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #ffffff; /* Full page light theme */
+  color: #333333; /* Dark text for contrast */
+  min-height: 100vh; /* Full viewport height */
+}
+
+/* Container styles */
 .container {
-    padding: 20px;
-    max-width: 600px;
-    margin: 0 auto;
+  padding: 20px;
+  width: 100%; /* Full width */
+  min-height: 100vh; /* Full height */
+  box-sizing: border-box; /* Include padding in width/height */
+  background-color: #ffffff; /* Ensure light theme */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Form styles */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
+  max-width: 800px; /* Limit content width for readability */
+}
+
+/* Input styles */
+.input {
+  padding: 8px;
+  width: 100%;
+  max-width: 400px;
+  border: 1px solid #cccccc;
+  border-radius: 4px;
+  font-size: 16px;
+  background-color: #f9f9f9;
+  color: #333333;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+}
+
+/* Button styles */
+.saveButton {
+  padding: 10px 20px;
+  background-color: #28a745;
+  color: #ffffff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  width: fit-content;
+}
+
+.saveButton:hover {
+  background-color: #218838;
+}
+
+.resetButton {
+  padding: 10px 20px;
+  background-color: #6c757d;
+  color: #ffffff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  width: fit-content;
+}
+
+.resetButton:hover {
+  background-color: #5a6268;
+}
+
+/* Tab panel styles */
+.tabPanel {
+  padding: 20px 0;
+  width: 100%;
+}
+
+/* Error styles */
+.error {
+  color: #dc3545;
+  font-size: 14px;
+}
+
+/* Responsive design */
+@media (max-width: 600px) {
+  .container {
+    padding: 10px;
   }
-  
-  .form {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-  }
-  
+
   .input {
-    padding: 8px;
-    margin-left: 10px;
+    max-width: 100%;
+  }
+
+  .saveButton,
+  .resetButton {
     width: 100%;
-    max-width: 400px;
+    margin-top: 10px;
   }
-  
-  .saveButton {
-    padding: 10px 20px;
-    background-color: #28a745;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-  
-  .saveButton:hover {
-    background-color: #218838;
-  }
+}

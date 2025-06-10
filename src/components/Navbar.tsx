@@ -16,6 +16,7 @@ export default function Navbar({ isOpen, onToggle }: NavbarProps) {
       <nav className={`${styles.navbar} ${isOpen ? styles.open : ''}`}>
         <ul className={styles.navList}>
           <li className={styles.navItem}>
+            <br></br>
             <a href="/batteries" className={styles.navLink}>
               <b>Batteries</b>
             </a>

@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react'; // Added useRef
 import {
   fetchLatestPrice,
   fetchSoc,
   executeManualTrade,
   fetchTransactions,
 } from '../../services/energyService';
+import Chart from 'chart.js/auto'; // Added Chart.js import
 import styles from './page.module.css';
 
 interface Transaction {
@@ -25,6 +26,10 @@ export default function FournisseurPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
+  // Refs for chart instances
+  const buySellChartRef = useRef<Chart | null>(null);
+  const trendsChartRef = useRef<Chart | null>(null);
+
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -41,7 +46,7 @@ export default function FournisseurPage() {
         setLoading(false);
       }
     };
-    loadData();
+    loadData(); // Moved inside useEffect
   }, []);
 
   const handleManualTrade = async (type: 'buy' | 'sell') => {
@@ -58,55 +63,111 @@ export default function FournisseurPage() {
     }
   };
 
-  // Calculate buy and sell counts
+  const totalTransactions = transactions.length;
   const buyCount = transactions.filter((tx) => tx.type === 'buy').length;
   const sellCount = transactions.filter((tx) => tx.type === 'sell').length;
 
+  // Chart setup
+  useEffect(() => {
+    const ctxBuySell = document.getElementById('buySellChart') as HTMLCanvasElement;
+    const ctxTrends = document.getElementById('trendsChart') as HTMLCanvasElement;
+
+    // Destroy existing charts to prevent memory leaks
+    if (buySellChartRef.current) {
+      buySellChartRef.current.destroy();
+    }
+    if (trendsChartRef.current) {
+      trendsChartRef.current.destroy();
+    }
+
+    if (ctxBuySell && ctxTrends) {
+      // Buy vs Sell Distribution (Pie Chart)
+      buySellChartRef.current = new Chart(ctxBuySell, {
+        type: 'pie',
+        data: {
+          labels: ['Buy', 'Sell'],
+          datasets: [{
+            data: [buyCount, sellCount],
+            backgroundColor: ['#34d399', '#ef4444'],
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+        },
+      });
+
+      // Transaction Trends (Line Chart) - Using transaction IDs as a proxy for time
+      const transactionIds = transactions.map(tx => `Transaction ${tx.id}`);
+      const counts = transactions.reduce((acc, tx) => {
+        acc[`Transaction ${tx.id}`] = (acc[`Transaction ${tx.id}`] || 0) + 1;
+        return acc;
+      }, {} as { [key: string]: number });
+      trendsChartRef.current = new Chart(ctxTrends, {
+        type: 'line',
+        data: {
+          labels: transactionIds,
+          datasets: [{
+            label: 'Transactions',
+            data: Object.values(counts),
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59, 130, 246, 0.2)',
+            fill: true,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+            },
+          },
+        },
+      });
+    }
+
+    // Cleanup on unmount
+    return () => {
+      if (buySellChartRef.current) buySellChartRef.current.destroy();
+      if (trendsChartRef.current) trendsChartRef.current.destroy();
+    };
+  }, [transactions, buyCount, sellCount]); // Dependencies updated to match definition order
+
   return (
-    // Line ~66: container div
     <div className={styles.container}>
       <h1 className={styles.title}>Fournisseur Management</h1>
-
       {loading && <p className={styles.loading}>Loading...</p>}
       {error && <p className={styles.error}>{error}</p>}
 
-      // Line ~72: mainLayout div
-      <div className={styles.mainLayout}>
-        // Line ~74: leftSection div
-        <div className={styles.leftSection}>
-          // Line ~76: transactionList div
-          <div className={styles.transactionList}>
-            <h2 className={styles.sectionTitle}>Transaction History</h2>
-            {transactions.length > 0 ? (
-              <ul>
-                {transactions.map((tx) => (
-                  <li key={tx.id} className={styles.transactionItem}>
-                    <span>
-                      {tx.type.toUpperCase()} - {tx.quantity} kWh at €{tx.price.toFixed(2)}
-                    </span>
-                    {tx.profit !== undefined && tx.profit > 0 && (
-                      <span className={styles.profit}>(Profit: €{tx.profit.toFixed(2)})</span>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className={styles.noTransactions}>No transactions yet.</p>
-            )}
-          </div>
-          // End transactionList div
-
-          // Line ~95: chartContainer div (replaced with text display)
-          <div className={styles.chartContainer}>
-            <h2 className={styles.sectionTitle}>Buy vs Sell Overview</h2>
-            <p>Buy Transactions: {buyCount}</p>
-            <p>Sell Transactions: {sellCount}</p>
-          </div>
-          // End chartContainer div
+      {/* Summary Cards */}
+      <div className={styles.summaryCards}>
+        <div className={styles.card}>
+          <h3>Total Transactions</h3>
+          <p className={styles.cardValue}>{totalTransactions}</p>
         </div>
-        // End leftSection div
+        <div className={styles.card}>
+          <h3>Buy Transactions</h3>
+          <p className={styles.cardValue}>{buyCount}</p>
+        </div>
+        <div className={styles.card}>
+          <h3>Sell Transactions</h3>
+          <p className={styles.cardValue}>{sellCount}</p>
+        </div>
+      </div>
 
-        // Line ~105: rightSection div
+      <div className={styles.mainLayout}>
+        <div className={styles.leftSection}>
+          <div className={styles.chartCard}>
+            <h2 className={styles.sectionTitle}>Buy vs Sell Distribution</h2>
+            <canvas id="buySellChart" style={{ height: '200px' }}></canvas>
+          </div>
+          <div className={styles.chartCard}>
+            <h2 className={styles.sectionTitle}>Transaction Trends</h2>
+            <canvas id="trendsChart" style={{ height: '200px' }}></canvas>
+          </div>
+        </div>
+
         <div className={styles.rightSection}>
           <div className={styles.infoCard}>
             <h2 className={styles.sectionTitle}>Current Market Price</h2>
@@ -114,16 +175,14 @@ export default function FournisseurPage() {
               {price !== null ? `€${price.toFixed(2)}/kWh` : 'N/A'}
             </p>
           </div>
-
           <div className={styles.infoCard}>
             <h2 className={styles.sectionTitle}>State of Charge (SOC)</h2>
             <p className={styles.infoText}>{soc !== null ? `${soc}%` : 'N/A'}</p>
           </div>
-
           <div className={styles.tradeControls}>
             <h2 className={styles.sectionTitle}>Manual Trade</h2>
             <div className={styles.inputGroup}>
-              pumps<label htmlFor="quantity">Quantity (kWh):</label>
+              <label htmlFor="quantity">Quantity (kWh):</label>
               <input
                 type="number"
                 id="quantity"
@@ -151,10 +210,7 @@ export default function FournisseurPage() {
             </div>
           </div>
         </div>
-        // End rightSection div
       </div>
-      // End mainLayout div
     </div>
-    // End container div
   );
 }
