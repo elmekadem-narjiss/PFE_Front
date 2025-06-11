@@ -36,7 +36,7 @@ import {
   ChartOptions,
 } from 'chart.js';
 import { fetchEvaluation, EvaluationResponse, EvaluationResult } from '../services/google_api';
-import styles from '../app/batteries/page.module.css';
+import styles from './page.module.css';
 
 // Import GridProps from @mui/material
 import { GridProps as MuiGridProps } from '@mui/material';

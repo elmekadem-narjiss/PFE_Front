@@ -1,208 +1,289 @@
-:root {
-  --primary-dark: #220e26;
-  --primary-accent: #703250;
-  --secondary-blue: #20b4d8;
-  --secondary-teal: #20dad0;
-  --light-bg: #b23508;
-  --border-gray: #cccccc;
-  --background-start: #f8efe3;
-  --background-end: #e0d7cc;
-}
-
 .container {
-  min-height: 100vh;
-  background: linear-gradient(135deg, var(--background-start) 0%, var(--background-end) 100%);
-  padding: 2rem;
-  font-family: 'Inter', 'Roboto', 'Helvetica Neue', sans-serif;
-  color: var(--primary-dark);
-  overflow-x: hidden;
-  transition: background 0.5s ease;
-  max-width: 1400px;
+  max-width: 1200px;
   margin: 0 auto;
+  padding: 2rem;
+  animation: fadeIn 0.5s ease-in; /* Fade-in animation for the entire container */
 }
 
 .title {
-  font-size: clamp(2rem, 6vw, 3rem);
-  font-weight: 800;
-  color: var(--primary-dark);
-  text-align: center;
-  margin-bottom: 0.5rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05rem;
-  animation: fadeIn 0.8s ease-in-out;
-}
-
-.subtitle {
-  font-size: clamp(1rem, 3vw, 1.25rem);
-  color: var(--primary-accent);
-  text-align: center;
+  font-size: 2rem;
+  font-weight: 600;
+  color: #e5e7eb;
   margin-bottom: 2rem;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.summaryCards {
-  display: flex;
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-  flex-wrap: wrap;
-  justify-content: center;
-  transition: gap 0.3s ease;
-}
-
-.card {
-  background: var(--secondary-teal);
-  padding: 1.5rem;
-  border-radius: 0.75rem;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
-  flex: 1;
-  min-width: 200px;
   text-align: center;
-  border: 1px solid var(--border-gray);
-  transition: all 0.3s ease;
-  animation: cardPop 0.5s ease-out;
+  animation: slideIn 0.5s ease-out; /* Slide-in effect for the title */
 }
 
-.card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-}
-
-@keyframes cardPop {
-  from { transform: scale(0.95); opacity: 0.8; }
-  to { transform: scale(1); opacity: 1; }
-}
-
-.chartCard {
-  background: var(--light-bg);
-  padding: 2rem;
-  border-radius: 0.75rem;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
-  transition: all 0.4s ease;
-  border: 1px solid var(--border-gray);
-  margin-bottom: 2.5rem;
-}
-
-.chartCard:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-}
-
-.chartCard canvas {
-  width: 100% !important;
-  height: 600px !important; /* Increased from 500px to 600px */
-  max-width: 100%;
-  object-fit: contain;
-  transition: height 0.3s ease;
-}
-
-.sectionTitle {
-  font-size: clamp(1.3rem, 3.5vw, 1.75rem);
-  font-weight: 700;
-  color: var(--primary-dark);
-  margin-bottom: 1rem;
-  border-bottom: 2px solid var(--primary-accent);
-  padding-bottom: 0.5rem;
-  transition: color 0.3s ease, border-color 0.3s ease;
-}
-
-.quantityInput,
-.actionSelect {
-  width: 100%;
-  min-width: 200px;
-  padding: 0.75rem;
-  border: 1px solid var(--border-gray);
+.formContainer {
+  background: rgba(255, 255, 255, 0.05);
   border-radius: 0.5rem;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  backdrop-filter: blur(10px);
+  transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transition for form container */
+  animation: fadeIn 0.7s ease-in; /* Fade-in animation for form container */
+}
+
+/* Slight scale-up on form interaction (e.g., when inputs are focused) */
+.formContainer:hover {
+  transform: scale(1.01);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+}
+
+.formTitle {
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: #e5e7eb;
+  margin-bottom: 1.5rem;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #e5e7eb;
+  margin-bottom: 0.5rem;
+}
+
+.input {
+  width: 100%;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.5rem;
+  color: #e5e7eb;
   font-size: 1rem;
-  transition: all 0.3s ease;
-}
-
-.quantityInput:focus,
-.actionSelect:focus {
-  border-color: var(--secondary-blue);
-  box-shadow: 0 0 0 3px rgba(32, 180, 216, 0.2);
   outline: none;
+  transition: all 0.2s ease;
 }
 
-.buyButton,
-.exportButton {
-  background: linear-gradient(90deg, var(--primary-accent) 0%, var(--primary-dark) 100%);
-  color: var(--light-bg);
-  padding: 0.75rem 1.5rem;
+.input:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: scale(1.01);
+}
+
+.input:focus {
+  border-color: #39c0ed;
+  background: rgba(255, 255, 255, 0.15);
+  transform: scale(1.02);
+  box-shadow: 0 0 8px rgba(57, 192, 237, 0.3);
+}
+
+.input:active {
+  animation: bounce 0.3s ease;
+}
+
+.buttonWrapper {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.addButton,
+.saveButton,
+.cancelButton,
+.chargeButton,
+.editButton,
+.deleteButton {
+  padding: 0.5rem 1rem;
   border: none;
   border-radius: 0.5rem;
-  font-size: 1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.4s ease;
+  transition: all 0.2s ease;
+  position: relative; /* For loading state */
 }
 
-.buyButton:hover,
-.exportButton:hover {
+.addButton.loading,
+.saveButton.loading,
+.cancelButton.loading,
+.chargeButton.loading,
+.editButton.loading,
+.deleteButton.loading {
+  opacity: 0.7;
+  cursor: not-allowed;
+  position: relative;
+}
+
+.addButton.loading::after,
+.saveButton.loading::after,
+.cancelButton.loading::after,
+.chargeButton.loading::after,
+.editButton.loading::after,
+.deleteButton.loading::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: 2px solid #ffffff;
+  border-top: 2px solid transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.addButton,
+.saveButton,
+.chargeButton {
+  background: linear-gradient(90deg, #2563eb, #39c0ed);
+  color: #ffffff;
+}
+
+.addButton:hover,
+.saveButton:hover,
+.chargeButton:hover {
+  background: linear-gradient(90deg, #1d4ed8, #2b9cd8);
+  box-shadow: 0 0 10px rgba(57, 192, 237, 0.5);
   transform: scale(1.05);
-  background: linear-gradient(90deg, var(--primary-dark) 0%, var(--primary-accent) 100%);
 }
 
-.insightsCard {
-  background: var(--secondary-blue);
-  padding: 2rem;
-  border-radius: 0.75rem;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
-  margin-bottom: 2.5rem;
-  color: #000000;
+.cancelButton {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e5e7eb;
 }
 
-.insightsCard .sectionTitle,
-.insightsCard ul li {
-  color: #000000 !important;
-  font-size: clamp(1.2rem, 3vw, 1.5rem);
+.cancelButton:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
 }
 
-/* New class to specifically target the phrases */
-.black-text {
-  color: #000000 !important;
+.editButton {
+  background: #85B8CB;
+  color: #ffffff;
 }
 
-@media (max-width: 1024px) {
-  .summaryCards {
-    flex-direction: column;
+.editButton:hover {
+  background: #059669;
+  transform: scale(1.05);
+}
+
+.deleteButton {
+  background: #1D6A96;
+  color: #ffffff;
+}
+
+.deleteButton:hover {
+  background: #dc2626;
+  transform: scale(1.05);
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: scale(1);
   }
-  .card {
-    min-width: 100%;
-    margin-bottom: 1.5rem;
+  50% {
+    transform: scale(0.95);
   }
 }
 
-@media (max-width: 768px) {
-  .title {
-    font-size: clamp(1.75rem, 5vw, 2rem);
+.addButton:active,
+.saveButton:active,
+.cancelButton:active,
+.chargeButton:active,
+.editButton:active,
+.deleteButton:active {
+  animation: bounce 0.3s ease;
+}
+
+.batteryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.batteryCard {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  animation: fadeIn 0.5s ease-in; /* Fade-in animation for cards */
+}
+
+.batteryCard:hover {
+  transform: translateY(-5px); /* Lift effect on hover */
+  box-shadow: 0 5px 15px rgba(255, 255, 255, 0.2); /* Glow on hover */
+}
+
+.failed {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
+  animation: pulse 2s infinite; /* Pulse animation for failed cards */
+  transition: background 0.5s ease; /* Smooth background transition */
+}
+
+.batteryTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #e5e7eb;
+  margin-bottom: 1rem;
+}
+
+.batteryInfo {
+  font-size: 0.9rem;
+  color: #d1d5db;
+  margin-bottom: 0.5rem;
+  transition: color 0.3s ease; /* Smooth color transition */
+}
+
+/* Fade-in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
   }
-  .subtitle {
-    font-size: clamp(0.9rem, 2.5vw, 1rem);
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
-  .card,
-  .chartCard,
-  .insightsCard {
-    padding: 1.5rem;
+}
+
+/* Slide-in animation for title */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
   }
-  .sectionTitle {
-    font-size: clamp(1.1rem, 3vw, 1.3rem);
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
-  .chartCard canvas {
-    height: 400px !important; /* Increased from 350px to 400px for smaller screens */
+}
+
+/* Pulse animation for failed cards */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5);
   }
-  .buyButton,
-  .exportButton {
-    padding: 0.5rem 1rem;
-    font-size: 0.9rem;
+  50% {
+    box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
   }
-  .insightsCard .sectionTitle,
-  .insightsCard ul li {
-    font-size: clamp(1rem, 2.5vw, 1.2rem);
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
   }
-  .black-text {
-    color: #000000 !important;
+}
+
+/* Spinner animation for loading state */
+@keyframes spin {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg);
   }
 }
