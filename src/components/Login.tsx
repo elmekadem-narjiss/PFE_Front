@@ -1,8 +1,7 @@
-"use client";
 
-import React, { createContext, useEffect, useState } from 'react';
+/*import React, { createContext, useEffect, useState } from 'react';
 import Keycloak from 'keycloak-js';
-import keycloakConfig from '../../components/keycloakConfig';
+import keycloakConfig from './keycloakConfig';
 
 interface KeycloakContextType {
   keycloak: Keycloak | null;
@@ -48,15 +47,4 @@ const KeycloakProvider: React.FC<{ children: React.ReactNode }> = ({ children })
 };
 
 export default KeycloakProvider;
-
-/*'use client';
-
-export default function LoginPage() {
-  return (
-    <div>
-      <h1>Connexion</h1>
-      <button>Se connecter</button>
-    </div>
-  );
-}
 */

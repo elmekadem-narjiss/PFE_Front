@@ -1,14 +1,20 @@
+
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useContext } from "react";
 import { useRouter } from "next/navigation";
+import { KeycloakContext } from "../components/KeycloakProvider";
 
 export default function Home() {
   const router = useRouter();
+  const context = useContext(KeycloakContext);
 
   useEffect(() => {
-    router.push("/login");
-  }, [router]);
+    console.log('page.tsx: Authenticated:', context.authenticated);
+    if (context.authenticated) {
+      router.push("/todolist");
+    }
+  }, [context, router]);
 
   return null;
 }

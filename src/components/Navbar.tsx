@@ -1,6 +1,8 @@
-'use client';
+"use client";
 
+import React, { useContext } from 'react';
 import styles from './navbar.module.css';
+import { KeycloakContext } from './KeycloakProvider';
 
 interface NavbarProps {
   isOpen: boolean;
@@ -8,6 +10,17 @@ interface NavbarProps {
 }
 
 export default function Navbar({ isOpen, onToggle }: NavbarProps) {
+  const keycloakContext = useContext(KeycloakContext);
+
+  const handleLogout = () => {
+    if (keycloakContext?.keycloak) {
+      console.log('Initiating Keycloak logout');
+      keycloakContext.keycloak.logout({ redirectUri: window.location.origin + '/' });
+    } else {
+      console.error('Keycloak instance not available');
+    }
+  };
+
   return (
     <>
       <button className={styles.toggleButton} onClick={onToggle}>
@@ -16,7 +29,7 @@ export default function Navbar({ isOpen, onToggle }: NavbarProps) {
       <nav className={`${styles.navbar} ${isOpen ? styles.open : ''}`}>
         <ul className={styles.navList}>
           <li className={styles.navItem}>
-            <br></br>
+            <br />
             <a href="/batteries" className={styles.navLink}>
               <b>Batteries</b>
             </a>
@@ -61,10 +74,13 @@ export default function Navbar({ isOpen, onToggle }: NavbarProps) {
               <b>Manage_Energie</b>
             </a>
           </li>
-
+          <li className={styles.navItem}>
+            <button onClick={handleLogout} className={`${styles.navLink} ${styles.logoutButton}`}>
+              <b>Logout</b>
+            </button>
+          </li>
         </ul>
       </nav>
     </>
   );
 }
-

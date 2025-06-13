@@ -1,4 +1,42 @@
-// app/layout.tsx
+import { Geist, Geist_Mono } from "next/font/google";
+import ClientWrapper from "@/components/ClientWrapper";
+import KeycloakProvider from "@/components/KeycloakProvider";
+import { connectKafka } from "@/lib/kafka";
+import "./globals.css";
+
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+export const metadata = {
+  title: "Battery Optimization Dashboard",
+  description: "A dashboard for battery charge/discharge optimization",
+};
+
+connectKafka().catch((error) => {
+  console.error("Failed to connect to Kafka in layout:", error);
+});
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="fr">
+      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+        <KeycloakProvider>
+          <ClientWrapper>{children}</ClientWrapper>
+        </KeycloakProvider>
+      </body>
+    </html>
+  );
+}
+
+
+/* app/layout.tsx
 import { Geist, Geist_Mono } from "next/font/google";
 import ClientWrapper from "@/components/ClientWrapper";
 import { connectKafka } from "@/lib/kafka";
@@ -33,3 +71,4 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     </html>
   );
 }
+*/
