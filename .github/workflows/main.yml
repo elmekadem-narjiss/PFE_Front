@@ -44,7 +44,7 @@ jobs:
       - name: Create Temporary Next.js Config
         run: |
           cat << EOF > next.config.js
-          module.exports = {
+          export default {
             telemetry: false,
             webpack(config, { isServer }) {
               // Modify CSS loader to allow global selectors
