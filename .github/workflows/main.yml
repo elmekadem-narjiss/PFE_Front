@@ -45,21 +45,27 @@ jobs:
         run: |
           cat << EOF > next.config.js
           export default {
-            telemetry: false,
             webpack(config, { isServer }) {
-              // Find CSS Module rules
+              // Find and modify CSS Module rules
               config.module.rules.forEach((rule) => {
                 if (rule.oneOf) {
                   rule.oneOf.forEach((oneOf) => {
-                    if (oneOf.test && oneOf.test.toString().includes('.module.css')) {
-                      oneOf.use.forEach((use) => {
-                        if (use.loader && use.loader.includes('css-loader')) {
-                          use.options.modules = {
-                            ...use.options.modules,
-                            localIdentName: '[name]__[local]___[hash:base64:5]',
-                            mode: 'global', // Allow global selectors like :root and body
+                    if (oneOf.test && /module\.css/.test(oneOf.test.toString())) {
+                      oneOf.use = oneOf.use.map((use) => {
+                        if (typeof use === 'object' && use.loader && use.loader.includes('css-loader')) {
+                          return {
+                            ...use,
+                            options: {
+                              ...use.options,
+                              modules: {
+                                ...use.options.modules,
+                                mode: 'global', // Allow global selectors like :root and body
+                                localIdentName: '[name]__[local]___[hash:base64:5]',
+                              },
+                            },
                           };
                         }
+                        return use;
                       });
                     }
                   });
@@ -92,7 +98,7 @@ jobs:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
-            ${{ runner.os }}-node-
+            ${{ runner.os }}- GenNode.js modules
       - name: Install Dependencies
         run: npm install
       - name: Run Tests with Jest
