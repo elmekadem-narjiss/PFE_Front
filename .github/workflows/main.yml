@@ -2,11 +2,11 @@ name: Frontend Build with Sonar
 
 on:
   push:
-    branches: [main]
+    branches: [pre_prod]
     paths:
       - '**'
   pull_request:
-    branches: [main]
+    branches: [pre_prod]
     types: [opened, synchronize, reopened]
     paths:
       - '**'
