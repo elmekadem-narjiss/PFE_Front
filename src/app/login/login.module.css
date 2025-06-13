@@ -1,0 +1,172 @@
+.logo {
+  position: absolute;
+  top: -50px; /* Adjusted for visibility testing */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: auto;
+  /* Add debug border to see the element */
+  border: 2px solid red; /* Temporary debug */
+}
+
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1a3c34, #1e40af); /* Green-blue gradient for energy/tech */
+  position: relative;
+  overflow: hidden; /* Check if this clips the logo */
+}
+
+.container::before {
+  content: '';
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(57, 192, 237, 0.1) 10%, transparent 20%);
+  animation: pulse 10s infinite ease-in-out;
+  opacity: 0.3;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 0.3; }
+  50% { transform: scale(1.2); opacity: 0.5; }
+  100% { transform: scale(1); opacity: 0.3; }
+}
+
+.loginBox {
+  background: rgba(255, 255, 255, 0.08); /* Slightly greener tint */
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 1.2rem;
+  padding: 1.5rem;
+  width: 100%;
+  max-width: 360px; /* Slightly smaller for compactness */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  position: relative;
+  overflow: hidden;
+}
+
+.loginBox::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, #22c55e, #3b82f6); /* Battery charge effect */
+  animation: charge 3s infinite linear;
+}
+
+@keyframes charge {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.title {
+  color: #e5e7eb; /* Light gray for readability */
+  font-size: 1.6rem; /* Slightly smaller */
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 1.25rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem; /* Tighter spacing */
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.label {
+  color: #d1d5db; /* Softer gray */
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 0.4rem;
+}
+
+.input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.4rem;
+  padding: 0.6rem 0.8rem; /* Smaller padding */
+  color: #ffffff;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.input:focus {
+  border-color: #22c55e; /* Green for energy */
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.3);
+}
+
+.submitButton {
+  background: linear-gradient(90deg, #22c55e, #3b82f6); /* Green-to-blue gradient */
+  border: none;
+  border-radius: 0.4rem;
+  padding: 0.7rem;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.submitButton::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.2);
+  transition: left 0.3s ease;
+}
+
+.submitButton:hover::after {
+  left: 0;
+}
+
+.submitButton:hover {
+  background: linear-gradient(90deg, #16a34a, #2563eb);
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.5);
+}
+
+.error {
+  color: #f97316; /* Orange for battery warning */
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 0.5rem;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .loginBox {
+    max-width: 320px;
+    padding: 1.2rem;
+  }
+
+  .title {
+    font-size: 1.4rem;
+  }
+
+  .input {
+    font-size: 0.85rem;
+    padding: 0.5rem 0.7rem;
+  }
+
+  .submitButton {
+    font-size: 0.9rem;
+    padding: 0.6rem;
+  }
+}

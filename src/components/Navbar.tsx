@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
-import styles from "./navbar.module.css";
-import { useKeycloak } from "@/context/KeycloakContext";
+import React, { useContext, useEffect } from 'react';
+import styles from './navbar.module.css';
+import { KeycloakContext } from './KeycloakProvider';
 
 interface NavbarProps {
   isOpen: boolean;
@@ -10,114 +10,86 @@ interface NavbarProps {
 }
 
 export default function Navbar({ isOpen, onToggle }: NavbarProps) {
-  const { keycloak, initialized, initError } = useKeycloak();
-
-  useEffect(() => {
-    console.log("Navbar - Initial State:", {
-      initialized,
-      authenticated: keycloak?.authenticated,
-      initError: initError?.message,
-      keycloakInstance: keycloak ? "Available" : "Not Available",
-    });
-
-    if (initialized && keycloak) {
-      console.log("Navbar - Keycloak Details:", {
-        authenticated: keycloak.authenticated,
-        token: keycloak.token ? "Present" : "Absent",
-        refreshToken: keycloak.refreshToken ? "Present" : "Absent",
-        hasLogoutMethod: typeof keycloak.logout === "function" ? "Yes" : "No",
-      });
-    }
-  }, [initialized, keycloak, initError]);
-
-  useEffect(() => {
-    if (initialized) {
-      console.log("Navbar - Authenticated State Changed:", keycloak?.authenticated);
-    }
-  }, [initialized, keycloak?.authenticated]);
-
-  if (!initialized) {
-    console.log("Navbar - Rendering Loading State due to !initialized");
-    return <div>Loading...</div>;
-  }
-
-  if (initError) {
-    console.log("Navbar - Rendering Error State:", initError.message);
-    return <div>Error initializing Keycloak: {initError.message}</div>;
-  }
+  const keycloakContext = useContext(KeycloakContext);
 
   const handleLogout = () => {
-    console.log("Navbar - Initiating Logout");
-    if (keycloak && typeof keycloak.logout === "function") {
-      keycloak.logout({ redirectUri: "http://localhost:3000/login" });
-      localStorage.removeItem("authState");
-      console.log("Navbar - Logout completed, authState removed from localStorage");
+    if (keycloakContext?.keycloak) {
+      console.log('Initiating Keycloak logout');
+      keycloakContext.keycloak.logout({ redirectUri: window.location.origin + '/' });
     } else {
-      console.error("Navbar - Error: Keycloak logout method not available");
-      // Fallback: Clear state and redirect manually
-      localStorage.removeItem("authState");
-      window.location.href = "http://localhost:3000/login";
+      console.error('Keycloak instance not available');
     }
   };
 
-  console.log("Navbar - Rendering with authenticated:", keycloak.authenticated);
+  useEffect(() => {
+    const img = new Image();
+    img.src = '/nelai-logo.jpg';
+    img.onload = () => console.log('Image preloaded successfully');
+    img.onerror = () => console.log('Image preloading failed');
+  }, []);
 
   return (
     <>
       <button className={styles.toggleButton} onClick={onToggle}>
-        {isOpen ? "✖" : "☰"}
+        {isOpen ? '✖' : '☰'}
       </button>
-      <nav className={`${styles.navbar} ${isOpen ? styles.open : ""}`}>
+      <nav className={`${styles.navbar} ${isOpen ? styles.open : ''}`}>
+        <div className={styles.logoContainer}>
+          <img src="https://i.pinimg.com/736x/9e/5c/42/9e5c4240297cf781948320b176e7a394.jpg" className={styles.logo} />
+          <span className={styles.logoText}>nelai</span>
+        </div>
         <ul className={styles.navList}>
           <li className={styles.navItem}>
-            <br />
-            <br />
-            <br />
-            <br />
             <a href="/batteries" className={styles.navLink}>
-              <b>Batteries</b>
+              <span>🔋</span> <b>Batteries</b>
             </a>
           </li>
           <li className={styles.navItem}>
             <a href="/dashboard" className={styles.navLink}>
-              <b>Predict-Service</b>
+              <span>📊</span> <b>Predict-Service</b>
             </a>
           </li>
           <li className={styles.navItem}>
             <a href="/reports" className={styles.navLink}>
-              <b>Reports</b>
+              <span>📝</span> <b>Reports</b>
             </a>
           </li>
           <li className={styles.navItem}>
             <a href="/settings" className={styles.navLink}>
-              <b>Settings</b>
+              <span>⚙️</span> <b>Settings</b>
             </a>
           </li>
           <li className={styles.navItem}>
             <a href="/dashboard/monitoring" className={styles.navLink}>
-              <b>Monitoring</b>
+              <span>👁️</span> <b>Monitoring</b>
             </a>
           </li>
           <li className={styles.navItem}>
             <a href="/todolist" className={styles.navLink}>
-              <b>ToDoList</b>
+              <span>📋</span> <b>ToDoList</b>
             </a>
           </li>
           <li className={styles.navItem}>
             <a href="/chat" className={styles.navLink}>
-              <b>Equip_Chat</b>
+              <span>💬</span> <b>Equip_Chat</b>
             </a>
           </li>
-          {keycloak.authenticated && (
-            <li className={styles.navItem}>
-              <button
-                onClick={handleLogout}
-                className={`${styles.navLink} ${styles.logoutButton}`}
-              >
-                Logout
-              </button>
-            </li>
-          )}
+          <li className={styles.navItem}>
+            <a href="/batteries/evaluation" className={styles.navLink}>
+              <span>✅</span> <b>Decision</b>
+            </a>
+          </li>
+          <li className={styles.navItem}>
+            <a href="/fournisseur" className={styles.navLink}>
+              <span>⚡</span> <b>Manage_Energie</b>
+            </a>
+          </li>
+          <li className={styles.navItem}>
+            <button onClick={handleLogout} className={`${styles.navLink} ${styles.logoutButton}`}>
+              <img src="https://cdn-icons-png.flaticon.com/512/126/126467.png" alt="Logout Icon" className={styles.logoutIcon} />
+              <b>Logout</b>
+            </button>
+          </li>
         </ul>
       </nav>
     </>

@@ -1,6 +1,6 @@
 /* Global Styles */
 body {
-  background-color: #120907;
+  background-color: #ffffff; /* Changed from #120907 to white */
   min-height: 100vh;
   padding: 2rem;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -18,22 +18,60 @@ h1 {
   margin-bottom: 1.5rem;
 }
 
+/* Filter and Add Section */
+.filter-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.filter-section .add-btn {
+  background-color: transparent;
+  color: #4c6096;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #4c6096;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.filter-section .add-btn:hover {
+  background-color: #4c6096;
+  color: #ffffff;
+}
+
+/* Global Add Form */
+.global-add-form {
+  background-color: #ffffff;
+  padding: 1rem;
+  border-radius: 0.375rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1.5rem;
+}
+
+/* Main Layout */
+.main-container {
+  display: flex;
+  gap: 2rem;
+}
+
 /* Board Layout */
 .board {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 1.5rem;
-  overflow-x: auto;
   padding-bottom: 1.5rem;
+  flex: 1;
 }
 
 /* Columns */
 .column {
   background-color: #c5dfed;
   border-radius: 0.5rem;
-  width: 350px;
+  width: 100%;
   min-height: 350px;
   padding: 1.5rem;
-  flex-shrink: 0;
 }
 
 .column[data-column="todo"] {
@@ -64,24 +102,24 @@ h1 {
 .task-card {
   background-color: #ffffff;
   border-radius: 0.375rem;
-  padding: 1.5rem; /* Increased padding to accommodate priority */
-  margin-bottom: 0.75rem;
+  padding: 1rem;
+  margin-bottom: 0.5rem;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   position: relative;
 }
 
 .task-card .task-content {
-  margin-right: 5rem;
+  margin-right: 3rem;
 }
 
 .task-card .task-content h3 {
-  font-size: 1rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: #19203d;
 }
 
 .task-card .task-content p {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   color: #4c6096;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -90,45 +128,44 @@ h1 {
 }
 
 .task-card .task-content .priority {
-  font-size: 0.875rem;
-  color: #384870; /* Slightly darker blue for priority to stand out */
+  font-size: 0.75rem;
+  color: #384870;
   font-weight: 500;
-  margin-top: 0.5rem;
-  padding: 0.25rem 0.5rem;
-  background-color: #e0e7ff; /* Light background to highlight priority */
+  margin-top: 0.25rem;
+  padding: 0.125rem 0.25rem;
+  background-color: #e0e7ff;
   border-radius: 0.25rem;
   display: inline-block;
 }
 
-/* Highlight priority based on value (optional visual feedback) */
 .task-card .task-content .priority[data-priority="high"] {
-  background-color: #fee2e2; /* Light red for high priority */
+  background-color: #fee2e2;
   color: #dc2626;
 }
 
 .task-card .task-content .priority[data-priority="medium"] {
-  background-color: #fefcbf; /* Light yellow for medium priority */
+  background-color: #fefcbf;
   color: #ca8a04;
 }
 
 .task-card .task-content .priority[data-priority="low"] {
-  background-color: #d1fae5; /* Light green for low priority */
+  background-color: #d1fae5;
   color: #047857;
 }
 
 .task-card .btn-group {
   position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
+  top: 0.5rem;
+  right: 0.5rem;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
 
 .task-card .btn-group button {
-  padding: 0.5rem 0.75rem;
+  padding: 0.375rem 0.5rem;
   border-radius: 0.375rem;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   transition: background-color 0.2s;
 }
 
@@ -150,35 +187,7 @@ h1 {
   background-color: #0d0604;
 }
 
-/* Add Card Section */
-.add-card {
-  margin-top: 1rem;
-}
-
-.add-card .add-btn {
-  background-color: transparent;
-  color: #4c6096;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #4c6096;
-  border-radius: 0.375rem;
-  width: 100%;
-  text-align: left;
-  font-size: 0.875rem;
-  transition: background-color 0.2s, color 0.2s;
-}
-
-.add-card .add-btn:hover {
-  background-color: #4c6096;
-  color: #ffffff;
-}
-
-.add-form {
-  background-color: #ffffff;
-  padding: 0.75rem;
-  border-radius: 0.375rem;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
+/* Add Form Inputs */
 .add-input {
   width: 100%;
   padding: 0.75rem;
@@ -217,6 +226,43 @@ h1 {
 
 .add-actions .cancel-btn:hover {
   background-color: #a3c5d9;
+}
+
+/* Stats Section */
+.stats-section {
+  background-color: #c5dfed;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  width: 250px;
+  flex-shrink: 0;
+}
+
+.stats-section h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #19203d;
+}
+
+.stats-section p {
+  font-size: 0.875rem;
+  color: #19203d;
+  margin-bottom: 0.5rem;
+}
+
+.stats-section .clear-btn {
+  background-color: #dc2626;
+  color: #ffffff;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  border: none;
+  margin-top: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.stats-section .clear-btn:hover {
+  background-color: #b91c1c;
 }
 
 /* Modal Styles */
@@ -284,12 +330,25 @@ h1 {
 
 /* Responsive Design */
 @media (max-width: 1525px) {
-  .board {
+  .main-container {
     flex-direction: column;
+  }
+
+  .board {
+    grid-template-columns: 1fr;
   }
 
   .column {
     width: 100%;
     margin-bottom: 1.5rem;
+  }
+
+  .stats-section {
+    width: 100%;
+  }
+
+  .filter-section {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }

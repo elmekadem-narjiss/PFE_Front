@@ -53,7 +53,7 @@ export default function Reports() {
   const determineStatus = (temperature: number): 'Operational' | 'Failed' =>
     temperature > TEMPERATURE_THRESHOLD ? 'Failed' : 'Operational';
 
-  const downloadPDF = () => {
+  const downloadPDF = async () => {
     try {
       console.log('jsPDF:', jsPDF);
       if (!jsPDF || typeof jsPDF !== 'function') {
@@ -73,6 +73,24 @@ export default function Reports() {
         throw new Error('autoTable method is not available after applying the plugin');
       }
 
+      // Use proxy API route to fetch the image
+      const logoUrl = 'https://i.pinimg.com/736x/9e/5c/42/9e5c4240297cf781948320b176e7a394.jpg';
+      const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(logoUrl)}`;
+      const logoResponse = await fetch(proxyUrl);
+      if (!logoResponse.ok) {
+        throw new Error('Failed to fetch image via proxy');
+      }
+      const logoBlob = await logoResponse.blob();
+      const logoReader = new FileReader();
+      await new Promise((resolve) => {
+        logoReader.onloadend = resolve;
+        logoReader.readAsDataURL(logoBlob);
+      });
+      const logoDataUrl = logoReader.result as string;
+
+      // Add logo to PDF
+      doc.addImage(logoDataUrl, 'JPEG', 20, 10, 30, 30); // Position: x=20, y=10, width=30, height=30
+
       const date = new Date()
         .toLocaleString('en-GB', {
           day: '2-digit',
@@ -86,12 +104,12 @@ export default function Reports() {
 
       doc.setFontSize(20);
       doc.setFont('helvetica', 'bold');
-      doc.text('Battery Status Report', 105, 20, { align: 'center' });
+      doc.text('Battery Status Report', 105, 50, { align: 'center' });
       doc.setFontSize(12);
       doc.setFont('helvetica', 'normal');
-      doc.text('xAI Energy Solutions', 105, 30, { align: 'center' });
-      doc.text(`Generated on: ${date}`, 105, 40, { align: 'center' });
-      doc.line(20, 50, 190, 50);
+      doc.text('xAI Energy Solutions', 105, 60, { align: 'center' });
+      doc.text(`Generated on: ${date}`, 105, 70, { align: 'center' });
+      doc.line(20, 80, 190, 80);
 
       const totalCapacity = monitoredBatteries.reduce((sum, b) => sum + (b.capacity ?? 0), 0);
       const avgStateOfCharge =
@@ -99,12 +117,12 @@ export default function Reports() {
         monitoredBatteries.length;
 
       doc.setFontSize(14);
-      doc.text('Summary', 20, 60);
+      doc.text('Summary', 20, 90);
       doc.setFontSize(12);
-      doc.text(`Total Capacity: ${totalCapacity.toFixed(2)} kWh`, 20, 70);
-      doc.text(`Average State of Charge: ${avgStateOfCharge.toFixed(1)}%`, 20, 80);
-      doc.text(`Number of Batteries: ${monitoredBatteries.length}`, 20, 90);
-      doc.line(20, 100, 190, 100);
+      doc.text(`Total Capacity: ${totalCapacity.toFixed(2)} kWh`, 20, 100);
+      doc.text(`Average State of Charge: ${avgStateOfCharge.toFixed(1)}%`, 20, 110);
+      doc.text(`Number of Batteries: ${monitoredBatteries.length}`, 20, 120);
+      doc.line(20, 130, 190, 130);
 
       const tableData = monitoredBatteries.map((b) => [
         b.id,
@@ -129,7 +147,7 @@ export default function Reports() {
       doc.autoTable({
         head: [['ID', 'Name', 'Capacity (kWh)', 'Voltage (V)', 'Temp (°C)', 'SoC (%)', 'Chemistry', 'Cycles', 'Status', 'Last Checked']],
         body: tableData,
-        startY: 110,
+        startY: 140,
         theme: 'grid',
         styles: { fontSize: 10, cellPadding: 3, halign: 'left', valign: 'middle' },
         headStyles: { fillColor: [22, 160, 133], textColor: [255, 255, 255], fontStyle: 'bold', lineWidth: 0.2 },
@@ -160,7 +178,7 @@ export default function Reports() {
         },
       });
 
-      const finalY = (doc as any).lastAutoTable?.finalY || 110;
+      const finalY = (doc as any).lastAutoTable?.finalY || 140;
       doc.setFontSize(12);
       doc.text(
         'This report was generated automatically by xAI Energy Solutions. For inquiries, contact support@xai.energy.',

@@ -59,3 +59,25 @@ export const updateTask = async (id: number, title: string, description: string,
   }
   return response.json();
 };
+
+
+export const clearTasks = async (): Promise<void> => {
+  try {
+    const response = await fetch(`${API_URL}/clear`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) {
+      let errorMessage = 'Failed to clear tasks';
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.error || errorMessage;
+      } catch (jsonError) {
+        console.error('Error parsing error response:', jsonError);
+      }
+      throw new Error(errorMessage);
+    }
+  } catch (error) {
+    console.error('Error clearing tasks:', error);
+    throw error;
+  }
+};

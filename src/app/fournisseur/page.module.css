@@ -1,0 +1,516 @@
+:root {
+  --dark-blue-gray: #233142;
+  --medium-blue-gray: #455d7a;
+  --bright-red: #f95959;
+  --light-gray: #e3e3e3;
+  --border-gray: #cccccc;
+  --background-start: #f0f0f0;
+  --background-end: #e0e0e0;
+}
+
+.container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--background-start) 0%, var(--background-end) 100%);
+  padding: 2rem;
+  font-family: 'Inter', 'Roboto', 'Helvetica Neue', sans-serif;
+  color: #1e293b;
+  overflow-x: hidden;
+  transition: background 5s ease infinite; /* Animate background gradient */
+  background-size: 200% 200%;
+  animation: gradientShift 5s ease infinite;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.title {
+  font-size: clamp(1.5rem, 5vw, 2.25rem);
+  font-weight: 700;
+  color: var(--dark-blue-gray);
+  text-align: center;
+  margin-bottom: 2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
+  animation: fadeIn 0.8s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.summaryCards {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  transition: gap 0.3s ease;
+}
+
+.card {
+  background: var(--light-gray);
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  flex: 1;
+  min-width: 200px;
+  text-align: center;
+  border: 1px solid var(--border-gray);
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.card::before {
+  content: '📊';
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  font-size: 1.2rem;
+  opacity: 0.3;
+  transition: opacity 0.3s ease;
+}
+
+.card:hover::before {
+  opacity: 0.7;
+}
+
+.card:hover::after {
+  content: 'Details: +5% growth this week'; /* Example hover detail */
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
+  font-size: 0.8rem;
+  color: var(--medium-blue-gray);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+}
+
+.card:hover::after {
+  opacity: 1;
+}
+
+.card h3 {
+  font-size: clamp(0.9rem, 2vw, 1rem);
+  color: var(--medium-blue-gray);
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+.card:hover h3 {
+  color: var(--dark-blue-gray);
+}
+
+.cardValue {
+  font-size: clamp(1.5rem, 4vw, 1.75rem);
+  font-weight: 600;
+  color: #1e293b;
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.card:hover .cardValue {
+  transform: scale(1.05);
+  color: var(--dark-blue-gray);
+}
+
+.mainLayout {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  transition: gap 0.3s ease, grid-template-columns 0.3s ease;
+}
+
+.leftSection, .rightSection {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  transition: gap 0.3s ease;
+}
+
+.chartCard, .infoCard, .tradeControls {
+  background: var(--light-gray);
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  transition: all 0.4s ease;
+  border: 1px solid var(--border-gray);
+  position: relative;
+  overflow: hidden;
+  max-height: 500px; /* Max height for collapsible effect */
+  transition: max-height 0.4s ease;
+}
+
+.chartCard.collapsed, .infoCard.collapsed, .tradeControls.collapsed {
+  max-height: 0;
+  padding: 0;
+  border: none;
+  overflow: hidden;
+}
+
+.chartCard:hover, .infoCard:hover, .tradeControls:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+}
+
+.chartCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 5px;
+  background: linear-gradient(to right, var(--dark-blue-gray), var(--medium-blue-gray));
+  transition: width 1.5s ease, opacity 0.3s ease;
+  opacity: 0.7;
+}
+
+.chartCard:hover::before {
+  width: 100%;
+  opacity: 1;
+}
+
+.chartCard canvas {
+  width: 100% !important;
+  height: 120px !important;
+  max-width: 100%;
+  object-fit: contain;
+  transition: height 0.3s ease;
+}
+
+.chartCard canvas:hover::after {
+  content: '📈';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.5rem;
+  color: var(--dark-blue-gray);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.chartCard:hover canvas:after {
+  opacity: 0.8;
+}
+
+.chartCard#trendsChartParent canvas {
+  height: 180px !important;
+  max-height: 180px;
+  overflow: hidden;
+}
+
+.sectionTitle {
+  font-size: clamp(1.2rem, 3vw, 1.5rem);
+  font-weight: 600;
+  color: var(--dark-blue-gray);
+  margin-bottom: 1rem;
+  border-bottom: 2px solid var(--medium-blue-gray);
+  padding-bottom: 0.5rem;
+  transition: color 0.3s ease, border-color 0.3s ease;
+  position: sticky;
+  top: 0;
+  background: var(--light-gray);
+  z-index: 1;
+  cursor: pointer; /* Indicate clickable for collapse */
+}
+
+.chartCard:hover .sectionTitle {
+  color: var(--medium-blue-gray);
+  border-color: var(--medium-blue-gray);
+}
+
+.infoText {
+  font-size: clamp(1.2rem, 3vw, 1.5rem);
+  color: #374151;
+  transition: color 0.3s ease;
+}
+
+.infoCard:hover .infoText {
+  color: var(--dark-blue-gray);
+}
+
+.inputGroup {
+  margin-bottom: 1rem;
+  transition: margin 0.3s ease;
+}
+
+.label {
+  display: block;
+  font-size: clamp(0.9rem, 2vw, 1rem);
+  font-weight: 500;
+  color: var(--medium-blue-gray);
+  margin-bottom: 0.75rem;
+  transition: color 0.3s ease;
+}
+
+.inputGroup:hover .label {
+  color: var(--dark-blue-gray);
+}
+
+.quantityInput {
+  width: 100%;
+  min-width: 100px;
+  padding: 0.75rem;
+  border: 1px solid var(--border-gray);
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.quantityInput:focus {
+  border-color: var(--dark-blue-gray);
+  box-shadow: 0 0 0 3px rgba(35, 49, 66, 0.2);
+  outline: none;
+}
+
+.buttonGroup {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  transition: gap 0.3s ease;
+}
+
+.buyButton {
+  background: linear-gradient(90deg, var(--medium-blue-gray) 0%, var(--dark-blue-gray) 100%);
+  color: #ffffff;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.4s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.buyButton::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.2);
+  transition: all 0.4s ease;
+}
+
+.buyButton:hover {
+  transform: scale(1.05);
+  background: linear-gradient(90deg, #455d7a 0%, #233142 100%);
+}
+
+.buyButton:hover::after {
+  left: 100%;
+}
+
+.buyButton:disabled {
+  background: var(--border-gray);
+  cursor: not-allowed;
+  transform: none;
+}
+
+.sellButton {
+  background: linear-gradient(90deg, var(--bright-red) 0%, #d64545 100%);
+  color: #ffffff;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.4s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.sellButton::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.2);
+  transition: all 0.4s ease;
+}
+
+.sellButton:hover {
+  transform: scale(1.05);
+  background: linear-gradient(90deg, #f95959 0%, #b91c1c 100%);
+}
+
+.sellButton:hover::after {
+  left: 100%;
+}
+
+.sellButton:disabled {
+  background: var(--border-gray);
+  cursor: not-allowed;
+  transform: none;
+}
+
+.error {
+  color: var(--bright-red);
+  font-size: 0.9rem;
+  margin-top: 1rem;
+  text-align: center;
+  animation: shake 0.3s ease;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-3px); }
+  75% { transform: translateX(3px); }
+}
+
+.loading {
+  color: var(--medium-blue-gray);
+  font-size: 0.9rem;
+  margin-top: 1rem;
+  text-align: center;
+  animation: pulse 1.2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.6; transform: scale(0.95); }
+  50% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0.6; transform: scale(0.95); }
+}
+
+.transactionList {
+  max-height: 400px;
+  overflow-y: auto;
+  transition: max-height 0.3s ease;
+}
+
+/* Custom Scrollbar */
+.transactionList::-webkit-scrollbar {
+  width: 8px;
+}
+
+.transactionList::-webkit-scrollbar-track {
+  background: var(--light-gray);
+  border-radius: 4px;
+}
+
+.transactionList::-webkit-scrollbar-thumb {
+  background: var(--medium-blue-gray);
+  border-radius: 4px;
+}
+
+.transactionList::-webkit-scrollbar-thumb:hover {
+  background: var(--dark-blue-gray);
+}
+
+.transactionItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border-gray);
+  transition: all 0.3s ease;
+}
+
+.transactionItem:hover {
+  background-color: #f3f4f6;
+  transform: translateX(5px);
+}
+
+.transactionItem:last-child {
+  border-bottom: none;
+}
+
+.noTransactions {
+  color: var(--medium-blue-gray);
+  font-size: 0.9rem;
+  font-style: italic;
+  text-align: center;
+  padding: 1rem 0;
+  transition: color 0.3s ease;
+}
+
+.profit {
+  color: var(--medium-blue-gray);
+  font-weight: 600;
+  transition: color 0.3s ease;
+}
+
+.transactionItem:hover .profit {
+  color: var(--dark-blue-gray);
+}
+
+/* Skeleton Loading */
+.card.skeleton, .chartCard.skeleton {
+  background: linear-gradient(90deg, var(--light-gray) 25%, #d9d9d9 50%, var(--light-gray) 75%);
+  background-size: 200% 100%;
+  animation: skeletonLoading 1.5s infinite;
+}
+
+@keyframes skeletonLoading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@media (max-width: 1024px) {
+  .mainLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .summaryCards {
+    flex-direction: column;
+  }
+
+  .card {
+    min-width: 100%;
+  }
+
+  .chartCard, .infoCard, .tradeControls {
+    padding: 1.25rem;
+  }
+
+  .chartCard canvas {
+    height: 100px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .title {
+    font-size: clamp(1.5rem, 5vw, 1.75rem);
+  }
+
+  .card, .chartCard, .infoCard, .tradeControls {
+    padding: 1rem;
+  }
+
+  .sectionTitle {
+    font-size: clamp(1rem, 3vw, 1.2rem);
+  }
+
+  .cardValue {
+    font-size: clamp(1.2rem, 4vw, 1.5rem);
+  }
+
+  .infoText {
+    font-size: clamp(1rem, 3vw, 1.25rem);
+  }
+
+  .chartCard canvas {
+    height: 80px !important;
+  }
+
+  .buyButton, .sellButton {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+}
