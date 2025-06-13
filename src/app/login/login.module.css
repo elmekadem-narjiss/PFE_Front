@@ -1,116 +1,172 @@
+.logo {
+  position: absolute;
+  top: -50px; /* Adjusted for visibility testing */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: auto;
+  /* Add debug border to see the element */
+  border: 2px solid red; /* Temporary debug */
+}
+
 .container {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background-color: #1a1f2e; /* Dark background similar to the image */
-  padding: 20px;
+  background: linear-gradient(135deg, #1a3c34, #1e40af); /* Green-blue gradient for energy/tech */
+  position: relative;
+  overflow: hidden; /* Check if this clips the logo */
 }
 
-.formSection {
-  background: transparent; /* No background for transparency effect */
-  padding: 40px; /* Increased padding for more space */
-  border-radius: 10px;
-  width: 400px;
-  animation: slideIn 0.8s ease-out;
+.container::before {
+  content: '';
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(57, 192, 237, 0.1) 10%, transparent 20%);
+  animation: pulse 10s infinite ease-in-out;
+  opacity: 0.3;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 0.3; }
+  50% { transform: scale(1.2); opacity: 0.5; }
+  100% { transform: scale(1); opacity: 0.3; }
+}
+
+.loginBox {
+  background: rgba(255, 255, 255, 0.08); /* Slightly greener tint */
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 1.2rem;
+  padding: 1.5rem;
+  width: 100%;
+  max-width: 360px; /* Slightly smaller for compactness */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  position: relative;
+  overflow: hidden;
+}
+
+.loginBox::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, #22c55e, #3b82f6); /* Battery charge effect */
+  animation: charge 3s infinite linear;
+}
+
+@keyframes charge {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
 }
 
 .title {
-  font-size: 24px;
-  color: #fff; /* White text */
-  margin-bottom: 40px; /* Increased spacing below title */
+  color: #e5e7eb; /* Light gray for readability */
+  font-size: 1.6rem; /* Slightly smaller */
+  font-weight: 700;
   text-align: center;
-  animation: fadeIn 1s ease-in;
+  margin-bottom: 1.25rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
-.formGroup {
-  margin-bottom: 30px; /* Increased spacing between form groups */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem; /* Tighter spacing */
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
 }
 
 .label {
-  display: block;
-  font-size: 14px;
-  color: #ccc; /* Light gray for labels */
-  margin-bottom: 10px; /* Spacing between label and input */
-  text-transform: uppercase;
+  color: #d1d5db; /* Softer gray */
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 0.4rem;
 }
 
 .input {
-  width: 100%;
-  padding: 12px;
-  border: 1px solid #4a4f60; /* Darker gray border */
-  border-radius: 5px;
-  background-color: #3a3f50; /* Gray background for inputs */
-  color: #fff;
-  font-size: 16px;
-  transition: border-color 0.3s ease;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.4rem;
+  padding: 0.6rem 0.8rem; /* Smaller padding */
+  color: #ffffff;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .input:focus {
-  border-color: #00c4b4; /* Teal focus effect */
-  outline: none;
-  box-shadow: 0 0 5px rgba(0, 196, 180, 0.5);
+  border-color: #22c55e; /* Green for energy */
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.3);
 }
 
-.input::placeholder {
-  color: #aaa;
-}
-
-.button {
-  width: 100%;
-  padding: 14px;
-  background-color: #00c4b4; /* Teal button */
+.submitButton {
+  background: linear-gradient(90deg, #22c55e, #3b82f6); /* Green-to-blue gradient */
   border: none;
-  border-radius: 5px;
-  color: #fff;
-  font-size: 16px;
+  border-radius: 0.4rem;
+  padding: 0.7rem;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: transform 0.3s, background-color 0.3s;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
 }
 
-.button:hover {
-  transform: scale(1.05);
-  background-color: #00b0a3; /* Slightly darker teal on hover */
+.submitButton::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.2);
+  transition: left 0.3s ease;
 }
 
-/* Animations */
-@keyframes slideIn {
-  from {
-    transform: translateX(-100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
+.submitButton:hover::after {
+  left: 0;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+.submitButton:hover {
+  background: linear-gradient(90deg, #16a34a, #2563eb);
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.5);
 }
 
-/* Responsive Design */
+.error {
+  color: #f97316; /* Orange for battery warning */
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 0.5rem;
+  font-weight: 500;
+}
+
 @media (max-width: 768px) {
-  .container {
-    min-height: auto;
-    padding: 10px;
-  }
-
-  .formSection {
-    width: 100%;
-    padding: 20px;
+  .loginBox {
+    max-width: 320px;
+    padding: 1.2rem;
   }
 
   .title {
-    margin-bottom: 20px;
+    font-size: 1.4rem;
   }
 
-  .formGroup {
-    margin-bottom: 20px;
+  .input {
+    font-size: 0.85rem;
+    padding: 0.5rem 0.7rem;
+  }
+
+  .submitButton {
+    font-size: 0.9rem;
+    padding: 0.6rem;
   }
 }

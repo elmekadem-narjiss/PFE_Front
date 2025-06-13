@@ -1,3 +1,31 @@
+.logoContainer {
+  position: relative;
+  text-align: center;
+  padding-top: 1rem;
+}
+
+.logo {
+  width: 80px; /* Reduced size */
+  height: 80px; /* Reduced size */
+  border-radius: 50%; /* Circular background */
+  object-fit: cover; /* Ensure the image fits within the circle */
+  /* Add debug border */
+  border: 2px solid rgb(178, 209, 213); /* Temporary debug */
+}
+
+.logoText {
+  display: block;
+  color: #ffffff; /* White text for contrast */
+  font-size: 1.2rem; /* Adjustable size */
+  font-weight: 700;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); /* Shadow for readability */
+  background: linear-gradient(90deg, #22c55e, #3b82f6); /* Gradient text */
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent; /* Allow gradient to show */
+  margin-top: 0.5rem; /* Space below the logo */
+}
+
 .navbar {
   position: fixed;
   top: 0;
@@ -10,7 +38,7 @@
   transform: translateX(-100%);
   transition: transform 0.3s ease;
   z-index: 1000;
-  padding: 1rem 0.5rem; /* Reduced padding */
+  padding: 1rem 0.5rem;
 }
 
 .navbar.open {
@@ -23,7 +51,7 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem; /* Reduced gap */
+  gap: 0.75rem;
 }
 
 .navItem {
@@ -31,14 +59,20 @@
 }
 
 .navLink {
-  display: block;
+  display: flex;
+  align-items: center;
   text-decoration: none;
   color: #4a2c4b;
-  font-size: 0.95rem; /* Reduced font size */
+  font-size: 0.95rem;
   font-weight: 500;
-  padding: 0.5rem 0.75rem; /* Reduced padding */
-  border-radius: 0.4rem; /* Slightly smaller radius */
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.4rem;
   transition: all 0.3s ease;
+}
+
+.navLink span {
+  margin-right: 0.5rem; /* Space between icon and text */
+  font-size: 1.1rem; /* Slightly larger icons */
 }
 
 .navLink:hover {
@@ -54,9 +88,9 @@
   background: linear-gradient(90deg, #2563eb, #39c0ed);
   color: #ffffff;
   border: none;
-  padding: 0.4rem 0.8rem; /* Reduced padding */
+  padding: 0.4rem 0.8rem;
   border-radius: 0.4rem;
-  font-size: 1.2rem; /* Reduced font size */
+  font-size: 1.2rem;
   cursor: pointer;
   transition: all 0.3s ease;
   z-index: 1001;
@@ -74,7 +108,7 @@
 @media (max-width: 768px) {
   .navbar {
     width: 200px;
-    padding: 0.75rem 0.5rem; /* Further reduced padding */
+    padding: 0.75rem 0.5rem;
   }
 
   .navbar.open + .toggleButton {
@@ -82,8 +116,12 @@
   }
 
   .navLink {
-    font-size: 0.9rem; /* Smaller font size on mobile */
+    font-size: 0.9rem;
     padding: 0.4rem 0.75rem;
+  }
+
+  .navLink span {
+    font-size: 1rem; /* Slightly smaller on mobile */
   }
 
   .toggleButton {
@@ -93,10 +131,11 @@
 }
 
 .logoutButton {
-  display: block;
+  display: flex;
+  align-items: center;
   text-decoration: none;
   color: #000000;
-  font-size: 0.95rem; /* Match navLink */
+  font-size: 0.95rem;
   font-weight: 500;
   padding: 0.5rem 0.75rem;
   border-radius: 0.4rem;
@@ -106,6 +145,12 @@
   transition: all 0.3s ease;
   width: 100%;
   text-align: left;
+}
+
+.logoutIcon {
+  width: 16px; /* Small icon size */
+  height: 16px;
+  margin-right: 0.5rem; /* Space between icon and text */
 }
 
 .logoutButton:hover {
