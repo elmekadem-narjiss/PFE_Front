@@ -25,8 +25,58 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+      - name: Cache Node.js modules
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
       - name: Install Dependencies
         run: npm install
+      - name: Cache Next.js build
+        uses: actions/cache@v3
+        with:
+          path: .next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-
+      - name: Create Temporary Next.js Config
+        run: |
+          cat << EOF > next.config.js
+          export default {
+            webpack(config, { isServer }) {
+              // Find and modify CSS Module rules
+              config.module.rules.forEach((rule) => {
+                if (rule.oneOf) {
+                  rule.oneOf.forEach((oneOf) => {
+                    if (oneOf.test && /module\.css/.test(oneOf.test.toString())) {
+                      oneOf.use = oneOf.use.map((use) => {
+                        if (typeof use === 'object' && use.loader && use.loader.includes('css-loader')) {
+                          return {
+                            ...use,
+                            options: {
+                              ...use.options,
+                              modules: {
+                                ...use.options.modules,
+                                mode: 'global', // Allow global selectors like :root and body
+                                localIdentName: '[name]__[local]___[hash:base64:5]',
+                              },
+                            },
+                          };
+                        }
+                        return use;
+                      });
+                    }
+                  });
+                }
+              });
+              return config;
+            },
+          };
+          EOF
+      - name: Verify Next.js Config
+        run: cat next.config.js
       - name: Build Frontend
         run: npm run build
       - name: Check Build Output
@@ -42,6 +92,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+      - name: Cache Node.js modules
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}- GenNode.js modules
       - name: Install Dependencies
         run: npm install
       - name: Run Tests with Jest
@@ -60,6 +117,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+      - name: Cache Node.js modules
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
       - name: Install Dependencies
         run: npm install
       - name: Run TypeScript Check
@@ -77,6 +141,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+      - name: Cache Node.js modules
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
       - name: Install Dependencies
         run: npm install
       - name: Install SonarScanner
