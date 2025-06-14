@@ -20,16 +20,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-      - name: Install Dependencies
+      - name: Install dependencies
         run: npm install
-      - name: Build Frontend
+      - name: Build frontend
         run: npm run build
-      - name: Check Build Output
+      - name: Check build output
         run: ls -la .next/ || echo "Build output not found"
 
   test:
     runs-on: ubuntu-latest
-    needs: build
+    needs: [build]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -37,17 +37,17 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-      - name: Install Dependencies
+      - name: Install dependencies
         run: npm install
-      - name: Run Tests with Jest
+      - name: Run tests with Jest
         run: npx jest --coverage --coverageReporters=lcov
-      - name: Check Coverage Output
+      - name: Check coverage output
         run: |
           ls -la coverage/ && cat coverage/lcov.info || echo "Coverage report not generated"
 
   typescript:
     runs-on: ubuntu-latest
-    needs: build
+    needs: [build]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -55,9 +55,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-      - name: Install Dependencies
+      - name: Install dependencies
         run: npm install
-      - name: Run TypeScript Check
+      - name: Run TypeScript check
         run: npx tsc --noEmit
 
   sonarcloud:
@@ -72,11 +72,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-      - name: Install Dependencies
+      - name: Install dependencies
         run: npm install
       - name: Install SonarScanner
         run: npm install -g sonar-scanner
-      - name: Run SonarCloud Scan
+      - name: Run SonarCloud scan
         run: |
           sonar-scanner \
             -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }} \
@@ -96,15 +96,32 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: Configure AWS Credentials
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-north-1
-      - name: Trigger Amplify Build
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Install dependencies
+        run: npm install
+      - name: Build frontend
+        run: npm run build
+      - name: Check build output
+        run: ls -la .next/ || echo "Build output not found"
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: next-build-artifacts
+          path: .next/
+      - name: Trigger Amplify build
         run: |
           aws amplify start-job \
             --app-id ${{ secrets.AMPLIFY_APP_ID }} \
             --branch-name main \
             --job-type RELEASE
+        env:
+          AWS_REGION: eu-north-1
