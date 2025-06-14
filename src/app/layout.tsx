@@ -4,6 +4,7 @@ import KeycloakProvider from "@/components/KeycloakProvider";
 import { connectKafka } from "@/lib/kafka";
 import "./globals.css";
 
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -72,3 +73,5 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   );
 }
 */
+
+//site web generer : http://nelaifrontrnd.s3-website.eu-north-1.amazonaws.com
