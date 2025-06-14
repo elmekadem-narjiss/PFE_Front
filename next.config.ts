@@ -1,4 +1,4 @@
-import path from 'path';Add commentMore actions
+import path from 'path'
 
 const nextConfig: NextConfig = {
 
@@ -17,4 +17,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;Add comment
+export default nextConfig
