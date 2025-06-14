@@ -1,8 +1,7 @@
-import path from 'path'
+import type { NextConfig } from 'next';
+import path from 'path';
 
 const nextConfig: NextConfig = {
-
-
   // Expose environment variables to the client side
   env: {
     NEXT_PUBLIC_KEYCLOAK_URL: process.env.NEXT_PUBLIC_KEYCLOAK_URL,
@@ -13,8 +12,23 @@ const nextConfig: NextConfig = {
   webpack: (config, { isServer }) => {
     // Preserve the existing core-js fallbacks
     config.resolve.fallback = {
-@@ -31,4 +32,4 @@ const nextConfig: NextConfig = {
+      ...config.resolve.fallback,
+      'core-js/modules/es.array.index-of': path.resolve('node_modules/core-js/modules/es.array.index-of.js'),
+      'core-js/modules/es.string.trim': path.resolve('node_modules/core-js/modules/es.string.trim.js'),
+      'core-js/modules/es.string.includes': path.resolve('node_modules/core-js/modules/es.string.includes.js'),
+      'core-js/modules/es.array.reverse': path.resolve('node_modules/core-js/modules/es.array.reverse.js'),
+    };
+
+    // Ensure keycloak-js is properly handled (optional, based on your needs)
+    if (!isServer) {
+      config.externals = {
+        ...config.externals,
+        'keycloak-js': 'Keycloak', // Ensure Keycloak is available globally if needed
+      };
+    }
+
+    return config;
   },
 };
 
-export default nextConfig
+export default nextConfig;
