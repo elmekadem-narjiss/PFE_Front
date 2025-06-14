@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
+    "export": "next export",
     "test": "jest",
     "start": "next start",
     "lint": "next lint"
