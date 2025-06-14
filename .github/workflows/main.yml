@@ -28,8 +28,15 @@ jobs:
         run: npm install
       - name: Build Frontend
         run: npm run build
+      - name: Export Static Files
+        run: npm run export
       - name: Check Build Output
-        run: ls -la .next/ || echo "Build output not found"
+        run: ls -la out/ || echo "Static output not found"
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: static-build
+          path: out/
 
   test:
     runs-on: ubuntu-latest
@@ -100,14 +107,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Download Build Artifact
+        uses: actions/download-artifact@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
-      - name: Install Dependencies
-        run: npm install
-      - name: Build Frontend
-        run: npm run build
+          name: static-build
+          path: out/
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -115,4 +119,4 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-north-1
       - name: Deploy to S3
-        run: aws s3 sync .next/ s3://nelaifrontrnd --delete
+        run: aws s3 sync out/ s3://nelaifrontrnd --delete
