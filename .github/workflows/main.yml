@@ -42,6 +42,8 @@ jobs:
           JSON_EVENTS="[{\"timestamp\": $(date -u +%s%3N), \"message\": \"${MESSAGE}\"}]"
           # Vérifier le contenu du JSON avant envoi
           echo "JSON à envoyer : $JSON_EVENTS"
+          # Créer le log stream si nécessaire
+          aws logs create-log-stream --log-group-name ${{ env.LOG_GROUP_NAME }} --log-stream-name ${{ github.run_id }}/build || true
           # Envoyer les événements directement
           aws logs put-log-events --log-group-name ${{ env.LOG_GROUP_NAME }} --log-stream-name ${{ github.run_id }}/build --log-events "$JSON_EVENTS"
         if: always()
@@ -76,6 +78,7 @@ jobs:
           MESSAGE="Etape de test terminee a $(date -u)"
           JSON_EVENTS="[{\"timestamp\": $(date -u +%s%3N), \"message\": \"${MESSAGE}\"}]"
           echo "JSON à envoyer : $JSON_EVENTS"
+          aws logs create-log-stream --log-group-name ${{ env.LOG_GROUP_NAME }} --log-stream-name ${{ github.run_id }}/test || true
           aws logs put-log-events --log-group-name ${{ env.LOG_GROUP_NAME }} --log-stream-name ${{ github.run_id }}/test --log-events "$JSON_EVENTS"
         if: always()
         env:
@@ -106,6 +109,7 @@ jobs:
           MESSAGE="Verification TypeScript terminee a $(date -u)"
           JSON_EVENTS="[{\"timestamp\": $(date -u +%s%3N), \"message\": \"${MESSAGE}\"}]"
           echo "JSON à envoyer : $JSON_EVENTS"
+          aws logs create-log-stream --log-group-name ${{ env.LOG_GROUP_NAME }} --log-stream-name ${{ github.run_id }}/typescript || true
           aws logs put-log-events --log-group-name ${{ env.LOG_GROUP_NAME }} --log-stream-name ${{ github.run_id }}/typescript --log-events "$JSON_EVENTS"
         if: always()
         env:
@@ -150,6 +154,7 @@ jobs:
           MESSAGE="Analyse SonarCloud terminee a $(date -u)"
           JSON_EVENTS="[{\"timestamp\": $(date -u +%s%3N), \"message\": \"${MESSAGE}\"}]"
           echo "JSON à envoyer : $JSON_EVENTS"
+          aws logs create-log-stream --log-group-name ${{ env.LOG_GROUP_NAME }} --log-stream-name ${{ github.run_id }}/sonarcloud || true
           aws logs put-log-events --log-group-name ${{ env.LOG_GROUP_NAME }} --log-stream-name ${{ github.run_id }}/sonarcloud --log-events "$JSON_EVENTS"
         if: always()
         env:
@@ -194,6 +199,7 @@ jobs:
           MESSAGE="Deploiement Amplify termine a $(date -u)"
           JSON_EVENTS="[{\"timestamp\": $(date -u +%s%3N), \"message\": \"${MESSAGE}\"}]"
           echo "JSON à envoyer : $JSON_EVENTS"
+          aws logs create-log-stream --log-group-name ${{ env.LOG_GROUP_NAME }} --log-stream-name ${{ github.run_id }}/deploy || true
           aws logs put-log-events --log-group-name ${{ env.LOG_GROUP_NAME }} --log-stream-name ${{ github.run_id }}/deploy --log-events "$JSON_EVENTS"
         if: always()
         env:
