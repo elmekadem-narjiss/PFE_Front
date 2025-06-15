@@ -38,8 +38,8 @@ jobs:
         run: |
           # Définir le message sans accents
           MESSAGE="Etape de build terminee a $(date -u)"
-          # Générer un fichier JSON valide
-          echo "{\"events\": [{\"timestamp\": $(date -u +%s%3N), \"message\": \"${MESSAGE}\\"}]}" > build.log
+          # Générer un fichier JSON valide avec guillemets correctement échappés
+          echo "{\"events\": [{\"timestamp\": $(date -u +%s%3N), \"message\": \"${MESSAGE}\"}]}" > build.log
           # Vérifier le contenu du fichier
           echo "Contenu de build.log :"
           cat build.log || echo "Fichier vide ou inaccessible"
@@ -75,7 +75,7 @@ jobs:
       - name: Envoyer les journaux de test à CloudWatch
         run: |
           MESSAGE="Etape de test terminee a $(date -u)"
-          echo "{\"events\": [{\"timestamp\": $(date -u +%s%3N), \"message\": \"${MESSAGE}\\"}]}" > test.log
+          echo "{\"events\": [{\"timestamp\": $(date -u +%s%3N), \"message\": \"${MESSAGE}\"}]}" > test.log
           echo "Contenu de test.log :"
           cat test.log || echo "Fichier vide ou inaccessible"
           aws logs put-log-events --log-group-name ${{ env.LOG_GROUP_NAME }} --log-stream-name ${{ github.run_id }}/test --log-events file://test.log
@@ -106,7 +106,7 @@ jobs:
       - name: Envoyer les journaux TypeScript à CloudWatch
         run: |
           MESSAGE="Verification TypeScript terminee a $(date -u)"
-          echo "{\"events\": [{\"timestamp\": $(date -u +%s%3N), \"message\": \"${MESSAGE}\\"}]}" > typescript.log
+          echo "{\"events\": [{\"timestamp\": $(date -u +%s%3N), \"message\": \"${MESSAGE}\"}]}" > typescript.log
           echo "Contenu de typescript.log :"
           cat typescript.log || echo "Fichier vide ou inaccessible"
           aws logs put-log-events --log-group-name ${{ env.LOG_GROUP_NAME }} --log-stream-name ${{ github.run_id }}/typescript --log-events file://typescript.log
@@ -151,7 +151,7 @@ jobs:
       - name: Envoyer les journaux SonarCloud à CloudWatch
         run: |
           MESSAGE="Analyse SonarCloud terminee a $(date -u)"
-          echo "{\"events\": [{\"timestamp\": $(date -u +%s%3N), \"message\": \"${MESSAGE}\\"}]}" > sonar.log
+          echo "{\"events\": [{\"timestamp\": $(date -u +%s%3N), \"message\": \"${MESSAGE}\"}]}" > sonar.log
           echo "Contenu de sonar.log :"
           cat sonar.log || echo "Fichier vide ou inaccessible"
           aws logs put-log-events --log-group-name ${{ env.LOG_GROUP_NAME }} --log-stream-name ${{ github.run_id }}/sonarcloud --log-events file://sonar.log
@@ -196,7 +196,7 @@ jobs:
       - name: Envoyer les journaux de déploiement à CloudWatch
         run: |
           MESSAGE="Deploiement Amplify termine a $(date -u)"
-          echo "{\"events\": [{\"timestamp\": $(date -u +%s%3N), \"message\": \"${MESSAGE}\\"}]}" > deploy.log
+          echo "{\"events\": [{\"timestamp\": $(date -u +%s%3N), \"message\": \"${MESSAGE}\"}]}" > deploy.log
           echo "Contenu de deploy.log :"
           cat deploy.log || echo "Fichier vide ou inaccessible"
           aws logs put-log-events --log-group-name ${{ env.LOG_GROUP_NAME }} --log-stream-name ${{ github.run_id }}/deploy --log-events file://deploy.log
