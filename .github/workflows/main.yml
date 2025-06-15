@@ -9,73 +9,109 @@ on:
 
 env:
   NODE_VERSION: '22'
+  AWS_REGION: 'eu-north-1'  # Ajustez selon votre région
+  LOG_GROUP_NAME: '/github/actions/workflow'  # Nom du groupe de journaux
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Récupérer le code
         uses: actions/checkout@v4
-      - name: Setup Node.js
+      - name: Configurer Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-      - name: Install dependencies
+      - name: Installer les dépendances
         run: npm install
-      - name: Build frontend
+      - name: Construire le frontend
         run: npm run build
-      - name: Check build output
-        run: ls -la .next/ || echo "Build output not found"
+      - name: Vérifier la sortie de build
+        run: ls -la .next/ || echo "Sortie de build non trouvée"
+      - name: Configurer les identifiants AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Envoyer les journaux de build à CloudWatch
+        run: |
+          echo "Étape de build terminée à $(date)" > build.log
+          aws logs put-log-events --log-group-name ${{ env.LOG_GROUP_NAME }} --log-stream-name ${{ github.run_id }}/build --log-events file://build.log
+        if: always()
 
   test:
     runs-on: ubuntu-latest
     needs: [build]
     steps:
-      - name: Checkout code
+      - name: Récupérer le code
         uses: actions/checkout@v4
-      - name: Setup Node.js
+      - name: Configurer Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-      - name: Install dependencies
+      - name: Installer les dépendances
         run: npm install
-      - name: Run tests with Jest
+      - name: Exécuter les tests avec Jest
         run: npx jest --coverage --coverageReporters=lcov
-      - name: Check coverage output
+      - name: Vérifier la sortie de couverture
         run: |
-          ls -la coverage/ && cat coverage/lcov.info || echo "Coverage report not generated"
+          ls -la coverage/ && cat coverage/lcov.info || echo "Rapport de couverture non généré"
+      - name: Configurer les identifiants AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Envoyer les journaux de test à CloudWatch
+        run: |
+          echo "Étape de test terminée à $(date)" > test.log
+          aws logs put-log-events --log-group-name ${{ env.LOG_GROUP_NAME }} --log-stream-name ${{ github.run_id }}/test --log-events file://test.log
+        if: always()
+
   typescript:
     runs-on: ubuntu-latest
     needs: [build]
     steps:
-      - name: Checkout code
+      - name: Récupérer le code
         uses: actions/checkout@v4
-      - name: Setup Node.js
+      - name: Configurer Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-      - name: Install dependencies
+      - name: Installer les dépendances
         run: npm install
-      - name: Run TypeScript check
+      - name: Exécuter la vérification TypeScript
         run: npx tsc --noEmit
+      - name: Configurer les identifiants AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Envoyer les journaux TypeScript à CloudWatch
+        run: |
+          echo "Vérification TypeScript terminée à $(date)" > typescript.log
+          aws logs put-log-events --log-group-name ${{ env.LOG_GROUP_NAME }} --log-stream-name ${{ github.run_id }}/typescript --log-events file://typescript.log
+        if: always()
 
   sonarcloud:
     runs-on: ubuntu-latest
     needs: [build, test]
     steps:
-      - name: Checkout code
+      - name: Récupérer le code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Setup Node.js
+      - name: Configurer Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-      - name: Install dependencies
+      - name: Installer les dépendances
         run: npm install
-      - name: Install SonarScanner
+      - name: Installer SonarScanner
         run: npm install -g sonar-scanner
-      - name: Run SonarCloud scan
+      - name: Exécuter l'analyse SonarCloud
         run: |
           sonar-scanner \
             -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }} \
@@ -87,40 +123,54 @@ jobs:
             -Dsonar.inclusions=**/*.ts,**/*.tsx
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Configurer les identifiants AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Envoyer les journaux SonarCloud à CloudWatch
+        run: |
+          echo "Analyse SonarCloud terminée à $(date)" > sonar.log
+          aws logs put-log-events --log-group-name ${{ env.LOG_GROUP_NAME }} --log-stream-name ${{ github.run_id }}/sonarcloud --log-events file://sonar.log
+        if: always()
 
   amplify-deploy:
     runs-on: ubuntu-latest
     needs: [build, test, sonarcloud]
     if: github.ref == 'refs/heads/main'
     steps:
-      - name: Checkout code
+      - name: Récupérer le code
         uses: actions/checkout@v4
-      - name: Configure AWS credentials
+      - name: Configurer les identifiants AWS
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-north-1
-      - name: Setup Node.js
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Configurer Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-      - name: Install dependencies
+      - name: Installer les dépendances
         run: npm install
-      - name: Build frontend
+      - name: Construire le frontend
         run: npm run build
-      - name: Check build output
-        run: ls -la .next/ || echo "Build output not found"
-      - name: Upload build artifacts
+      - name: Vérifier la sortie de build
+        run: ls -la .next/ || echo "Sortie de build non trouvée"
+      - name: Téléverser les artefacts de build
         uses: actions/upload-artifact@v4
         with:
           name: next-build-artifacts
           path: .next/
-      - name: Trigger Amplify build
+      - name: Déclencher le build Amplify
         run: |
           aws amplify start-job \
             --app-id ${{ secrets.AMPLIFY_APP_ID }} \
             --branch-name main \
             --job-type RELEASE
-        env:
-          AWS_REGION: eu-north-1
+      - name: Envoyer les journaux de déploiement à CloudWatch
+        run: |
+          echo "Déploiement Amplify terminé à $(date)" > deploy.log
+          aws logs put-log-events --log-group-name ${{ env.LOG_GROUP_NAME }} --log-stream-name ${{ github.run_id }}/deploy --log-events file://deploy.log
+        if: always()
