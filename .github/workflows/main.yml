@@ -38,15 +38,22 @@ jobs:
         run: |
           # Définir le message sans accents
           MESSAGE="Etape de build terminee a $(date -u)"
-          # Générer un fichier JSON valide avec guillemets correctement échappés
+          # Générer un fichier JSON valide
           echo "{\"events\": [{\"timestamp\": $(date -u +%s%3N), \"message\": \"${MESSAGE}\"}]}" > build.log
-          # Attendre un court instant pour s'assurer que l'écriture est terminée
-          sleep 1
+          # Forcer la synchronisation du système de fichiers
+          sync
+          # Vérifier que le fichier existe et n'est pas vide
+          if [ ! -s build.log ]; then
+            echo "Erreur : build.log est vide ou inexistant"
+            exit 1
+          fi
           # Vérifier le contenu du fichier avant envoi
           echo "Contenu de build.log avant envoi :"
-          cat build.log || echo "Fichier vide ou inaccessible"
-          # Envoyer les événements au groupe de journaux
+          cat build.log
+          # Envoyer les événements au groupe de journaux (via fichier)
           aws logs put-log-events --log-group-name ${{ env.LOG_GROUP_NAME }} --log-stream-name ${{ github.run_id }}/build --log-events file://build.log
+          # Alternative : envoyer directement le JSON pour tester
+          # aws logs put-log-events --log-group-name ${{ env.LOG_GROUP_NAME }} --log-stream-name ${{ github.run_id }}/build --log-events "[{\"timestamp\": $(date -u +%s%3N), \"message\": \"${MESSAGE}\"}]"
         if: always()
         env:
           AWS_DEFAULT_REGION: ${{ env.AWS_REGION }}
@@ -78,10 +85,16 @@ jobs:
         run: |
           MESSAGE="Etape de test terminee a $(date -u)"
           echo "{\"events\": [{\"timestamp\": $(date -u +%s%3N), \"message\": \"${MESSAGE}\"}]}" > test.log
-          sleep 1
+          sync
+          if [ ! -s test.log ]; then
+            echo "Erreur : test.log est vide ou inexistant"
+            exit 1
+          fi
           echo "Contenu de test.log avant envoi :"
-          cat test.log || echo "Fichier vide ou inaccessible"
+          cat test.log
           aws logs put-log-events --log-group-name ${{ env.LOG_GROUP_NAME }} --log-stream-name ${{ github.run_id }}/test --log-events file://test.log
+          # Alternative : envoyer directement le JSON pour tester
+          # aws logs put-log-events --log-group-name ${{ env.LOG_GROUP_NAME }} --log-stream-name ${{ github.run_id }}/test --log-events "[{\"timestamp\": $(date -u +%s%3N), \"message\": \"${MESSAGE}\"}]"
         if: always()
         env:
           AWS_DEFAULT_REGION: ${{ env.AWS_REGION }}
@@ -110,10 +123,16 @@ jobs:
         run: |
           MESSAGE="Verification TypeScript terminee a $(date -u)"
           echo "{\"events\": [{\"timestamp\": $(date -u +%s%3N), \"message\": \"${MESSAGE}\"}]}" > typescript.log
-          sleep 1
+          sync
+          if [ ! -s typescript.log ]; then
+            echo "Erreur : typescript.log est vide ou inexistant"
+            exit 1
+          fi
           echo "Contenu de typescript.log avant envoi :"
-          cat typescript.log || echo "Fichier vide ou inaccessible"
+          cat typescript.log
           aws logs put-log-events --log-group-name ${{ env.LOG_GROUP_NAME }} --log-stream-name ${{ github.run_id }}/typescript --log-events file://typescript.log
+          # Alternative : envoyer directement le JSON pour tester
+          # aws logs put-log-events --log-group-name ${{ env.LOG_GROUP_NAME }} --log-stream-name ${{ github.run_id }}/typescript --log-events "[{\"timestamp\": $(date -u +%s%3N), \"message\": \"${MESSAGE}\"}]"
         if: always()
         env:
           AWS_DEFAULT_REGION: ${{ env.AWS_REGION }}
@@ -156,10 +175,16 @@ jobs:
         run: |
           MESSAGE="Analyse SonarCloud terminee a $(date -u)"
           echo "{\"events\": [{\"timestamp\": $(date -u +%s%3N), \"message\": \"${MESSAGE}\"}]}" > sonar.log
-          sleep 1
+          sync
+          if [ ! -s sonar.log ]; then
+            echo "Erreur : sonar.log est vide ou inexistant"
+            exit 1
+          fi
           echo "Contenu de sonar.log avant envoi :"
-          cat sonar.log || echo "Fichier vide ou inaccessible"
+          cat sonar.log
           aws logs put-log-events --log-group-name ${{ env.LOG_GROUP_NAME }} --log-stream-name ${{ github.run_id }}/sonarcloud --log-events file://sonar.log
+          # Alternative : envoyer directement le JSON pour tester
+          # aws logs put-log-events --log-group-name ${{ env.LOG_GROUP_NAME }} --log-stream-name ${{ github.run_id }}/sonarcloud --log-events "[{\"timestamp\": $(date -u +%s%3N), \"message\": \"${MESSAGE}\"}]"
         if: always()
         env:
           AWS_DEFAULT_REGION: ${{ env.AWS_REGION }}
@@ -202,10 +227,16 @@ jobs:
         run: |
           MESSAGE="Deploiement Amplify termine a $(date -u)"
           echo "{\"events\": [{\"timestamp\": $(date -u +%s%3N), \"message\": \"${MESSAGE}\"}]}" > deploy.log
-          sleep 1
+          sync
+          if [ ! -s deploy.log ]; then
+            echo "Erreur : deploy.log est vide ou inexistant"
+            exit 1
+          fi
           echo "Contenu de deploy.log avant envoi :"
-          cat deploy.log || echo "Fichier vide ou inaccessible"
+          cat deploy.log
           aws logs put-log-events --log-group-name ${{ env.LOG_GROUP_NAME }} --log-stream-name ${{ github.run_id }}/deploy --log-events file://deploy.log
+          # Alternative : envoyer directement le JSON pour tester
+          # aws logs put-log-events --log-group-name ${{ env.LOG_GROUP_NAME }} --log-stream-name ${{ github.run_id }}/deploy --log-events "[{\"timestamp\": $(date -u +%s%3N), \"message\": \"${MESSAGE}\"}]"
         if: always()
         env:
           AWS_DEFAULT_REGION: ${{ env.AWS_REGION }}
