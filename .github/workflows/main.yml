@@ -6,6 +6,8 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+  schedule:
+    - cron: '0 */3 * * *'  # Exécuter toutes les 3 heures (0h, 3h, 6h, 9h, 12h, 15h, 18h, 21h UTC)
 
 env:
   NODE_VERSION: '22'
