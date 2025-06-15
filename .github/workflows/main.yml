@@ -27,7 +27,7 @@ jobs:
       - name: Construire le frontend
         run: npm run build
       - name: Vérifier la sortie de build
-        run: ls -la .next/ || echo "Sortie de build non trouvée"
+        run: ls -la .next/ || echo "Sortie de build non trouvee"
       - name: Configurer les identifiants AWS
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -36,7 +36,8 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
       - name: Envoyer les journaux de build à CloudWatch
         run: |
-          echo "Étape de build terminée à $(date)" > build.log
+          MESSAGE="Etape de build terminee a $(date -u)"
+          echo "{\"events\": [{\"timestamp\": $(date -u +%s%3N), \"message\": \"$MESSAGE\"}]}" > build.log
           aws logs put-log-events --log-group-name ${{ env.LOG_GROUP_NAME }} --log-stream-name ${{ github.run_id }}/build --log-events file://build.log
         if: always()
 
@@ -56,7 +57,7 @@ jobs:
         run: npx jest --coverage --coverageReporters=lcov
       - name: Vérifier la sortie de couverture
         run: |
-          ls -la coverage/ && cat coverage/lcov.info || echo "Rapport de couverture non généré"
+          ls -la coverage/ && cat coverage/lcov.info || echo "Rapport de couverture non genere"
       - name: Configurer les identifiants AWS
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -65,7 +66,8 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
       - name: Envoyer les journaux de test à CloudWatch
         run: |
-          echo "Étape de test terminée à $(date)" > test.log
+          MESSAGE="Etape de test terminee a $(date -u)"
+          echo "{\"events\": [{\"timestamp\": $(date -u +%s%3N), \"message\": \"$MESSAGE\"}]}" > test.log
           aws logs put-log-events --log-group-name ${{ env.LOG_GROUP_NAME }} --log-stream-name ${{ github.run_id }}/test --log-events file://test.log
         if: always()
 
@@ -91,7 +93,8 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
       - name: Envoyer les journaux TypeScript à CloudWatch
         run: |
-          echo "Vérification TypeScript terminée à $(date)" > typescript.log
+          MESSAGE="Verification TypeScript terminee a $(date -u)"
+          echo "{\"events\": [{\"timestamp\": $(date -u +%s%3N), \"message\": \"$MESSAGE\"}]}" > typescript.log
           aws logs put-log-events --log-group-name ${{ env.LOG_GROUP_NAME }} --log-stream-name ${{ github.run_id }}/typescript --log-events file://typescript.log
         if: always()
 
@@ -131,7 +134,8 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
       - name: Envoyer les journaux SonarCloud à CloudWatch
         run: |
-          echo "Analyse SonarCloud terminée à $(date)" > sonar.log
+          MESSAGE="Analyse SonarCloud terminee a $(date -u)"
+          echo "{\"events\": [{\"timestamp\": $(date -u +%s%3N), \"message\": \"$MESSAGE\"}]}" > sonar.log
           aws logs put-log-events --log-group-name ${{ env.LOG_GROUP_NAME }} --log-stream-name ${{ github.run_id }}/sonarcloud --log-events file://sonar.log
         if: always()
 
@@ -157,7 +161,7 @@ jobs:
       - name: Construire le frontend
         run: npm run build
       - name: Vérifier la sortie de build
-        run: ls -la .next/ || echo "Sortie de build non trouvée"
+        run: ls -la .next/ || echo "Sortie de build non trouvee"
       - name: Téléverser les artefacts de build
         uses: actions/upload-artifact@v4
         with:
@@ -171,6 +175,7 @@ jobs:
             --job-type RELEASE
       - name: Envoyer les journaux de déploiement à CloudWatch
         run: |
-          echo "Déploiement Amplify terminé à $(date)" > deploy.log
+          MESSAGE="Deploiement Amplify termine a $(date -u)"
+          echo "{\"events\": [{\"timestamp\": $(date -u +%s%3N), \"message\": \"$MESSAGE\"}]}" > deploy.log
           aws logs put-log-events --log-group-name ${{ env.LOG_GROUP_NAME }} --log-stream-name ${{ github.run_id }}/deploy --log-events file://deploy.log
         if: always()
