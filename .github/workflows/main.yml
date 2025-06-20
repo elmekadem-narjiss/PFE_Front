@@ -13,6 +13,8 @@ env:
   NODE_VERSION: '22'
   AWS_REGION: 'eu-north-1'  # Ajustez selon votre région
   LOG_GROUP_NAME: '/github/actions/workflow'  # Nom du groupe de journaux
+  S3_BUCKET_NAME: 'my-frontend-builds-2025'  # Remplacez par votre bucket S3
+  SNS_TOPIC_ARN: ${{ secrets.SNS_TOPIC_ARN }}  # ARN du topic SNS
 
 jobs:
   build:
@@ -36,17 +38,14 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
+      - name: Téléverser les artefacts sur S3
+        run: aws s3 cp .next/ s3://${{ env.S3_BUCKET_NAME }}/build-artifacts/ --recursive
       - name: Envoyer les journaux de build à CloudWatch
         run: |
-          # Définir le message sans accents
           MESSAGE="Etape de build terminee a $(date -u)"
-          # Générer le JSON directement pour l'envoi
           JSON_EVENTS="[{\"timestamp\": $(date -u +%s%3N), \"message\": \"${MESSAGE}\"}]"
-          # Vérifier le contenu du JSON avant envoi
           echo "JSON à envoyer : $JSON_EVENTS"
-          # Créer le log stream si nécessaire
           aws logs create-log-stream --log-group-name ${{ env.LOG_GROUP_NAME }} --log-stream-name ${{ github.run_id }}/build || true
-          # Envoyer les événements directement
           aws logs put-log-events --log-group-name ${{ env.LOG_GROUP_NAME }} --log-stream-name ${{ github.run_id }}/build --log-events "$JSON_EVENTS"
         if: always()
         env:
@@ -196,6 +195,12 @@ jobs:
             --app-id ${{ secrets.AMPLIFY_APP_ID }} \
             --branch-name main \
             --job-type RELEASE
+      - name: Envoyer une notification SNS en cas de succès
+        run: aws sns publish --topic-arn ${{ env.SNS_TOPIC_ARN }} --message "Déploiement Amplify terminé avec succès à $(date -u)"
+        if: success()
+      - name: Envoyer une notification SNS en cas d'échec
+        run: aws sns publish --topic-arn ${{ env.SNS_TOPIC_ARN }} --message "Déploiement Amplify a échoué à $(date -u)"
+        if: failure()
       - name: Envoyer les journaux de déploiement à CloudWatch
         run: |
           MESSAGE="Deploiement Amplify termine a $(date -u)"
