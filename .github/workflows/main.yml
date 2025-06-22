@@ -7,7 +7,7 @@ on:
     branches: [main]
   workflow_dispatch:
   schedule:
-    - cron: '0 */3 * * *'  # Exécuter toutes les 3 heures
+   # - cron: '0 */3 * * *'  # Exécuter toutes les 3 heures
 
 env:
   NODE_VERSION: '22'
